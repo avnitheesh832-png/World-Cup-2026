@@ -24,11 +24,11 @@ function loadDB() {
 
 function initDB() {
   return {
-    players: [],           // [{ id, name, createdAt }]
-    predictions: {},       // { playerId: { matchId: { homeScore, awayScore, result } } }
-    outright_preds: {},    // { playerId: { outrightId: string } }
-    results: {},           // { matchId: { homeScore, awayScore, result, status } }
-    outright_answers: {},  // { outrightId: string }
+    players: [],
+    predictions: {},
+    outright_preds: {},
+    results: {},
+    outright_answers: {},
     lastSync: null,
     apiKey: API_FOOTBALL_KEY,
   };
@@ -39,7 +39,7 @@ function saveDB(db) {
   fs.writeFileSync(DATA_FILE, JSON.stringify(db, null, 2));
 }
 
-// ─── Auth middleware ─────────────────────────────────────────────────────────
+// ─── Auth middleware ──────────────────────────────────────────────────────────
 
 function adminAuth(req, res, next) {
   const pw = req.headers['x-admin-password'] || req.body?.adminPassword;
@@ -47,12 +47,11 @@ function adminAuth(req, res, next) {
   next();
 }
 
-// ─── Match lock logic ────────────────────────────────────────────────────────
+// ─── Match lock logic ─────────────────────────────────────────────────────────
 
 function isMatchLocked(matchId) {
   const match = MATCHES.find(m => m.id == matchId);
   if (!match || !match.kickoff) return false;
-  // Lock 5 minutes before kickoff
   return Date.now() >= new Date(match.kickoff).getTime() - 5 * 60 * 1000;
 }
 
@@ -62,7 +61,7 @@ function getMatchResult(hs, as) {
   return 'D';
 }
 
-// ─── Scoring ─────────────────────────────────────────────────────────────────
+// ─── Scoring ──────────────────────────────────────────────────────────────────
 
 function calcScore(db, playerId) {
   let matchResult = 0, correctScore = 0, outrightPts = 0;
@@ -81,7 +80,7 @@ function calcScore(db, playerId) {
   return { matchResult, correctScore, outrightPts, total: matchResult + correctScore + outrightPts };
 }
 
-// ─── Live sync ───────────────────────────────────────────────────────────────
+// ─── Live sync ────────────────────────────────────────────────────────────────
 
 async function syncLiveResults(db) {
   const key = db.apiKey || API_FOOTBALL_KEY;
@@ -120,31 +119,41 @@ async function syncLiveResults(db) {
   }
 }
 
-// Auto-sync every 3 minutes during tournament window (Jun 11 – Jul 26 2026)
 cron.schedule('*/3 * * * *', async () => {
   const now = new Date();
-  const start = new Date('2026-06-11T00:00Z'), end = new Date('2026-07-27T00:00Z');
-  if (now >= start && now <= end) {
+  if (now >= new Date('2026-06-11T00:00Z') && now <= new Date('2026-07-27T00:00Z')) {
     const db = loadDB();
     if (db.apiKey || API_FOOTBALL_KEY) await syncLiveResults(db);
   }
 });
 
+// ─── PIN auth ─────────────────────────────────────────────────────────────────
+
+// Verify PIN before letting a player in
+app.post('/api/verify-pin/:playerId', (req, res) => {
+  const db = loadDB();
+  const player = db.players.find(p => p.id === req.params.playerId);
+  if (!player) return res.status(404).json({ error: 'Player not found' });
+  if (!player.pin) return res.json({ ok: true, noPin: true }); // no PIN set = open
+  const { pin } = req.body;
+  if (String(pin) !== String(player.pin)) return res.status(401).json({ error: 'Wrong PIN — try again' });
+  res.json({ ok: true });
+});
+
 // ─── PUBLIC ROUTES ────────────────────────────────────────────────────────────
 
-// Static config for the frontend
 app.get('/api/config', (req, res) => {
   const db = loadDB();
   res.json({
     matches: MATCHES,
     outrights: OUTRIGHTS,
-    players: db.players,
+    // Only expose name + id + whether PIN is set (never the actual PIN)
+    players: db.players.map(p => ({ id: p.id, name: p.name, hasPin: !!p.pin })),
     lockMinutes: 5,
     now: new Date().toISOString(),
   });
 });
 
-// Leaderboard
 app.get('/api/leaderboard', (req, res) => {
   const db = loadDB();
   const completedMatches = Object.values(db.results).filter(r => r.status === 'FT').length;
@@ -156,22 +165,30 @@ app.get('/api/leaderboard', (req, res) => {
   res.json({ scores, completedMatches, liveMatches, lastSync: db.lastSync, totalMatches: MATCHES.length });
 });
 
-// Get a player's predictions
 app.get('/api/predictions/:playerId', (req, res) => {
   const db = loadDB();
   const player = db.players.find(p => p.id === req.params.playerId);
   if (!player) return res.status(404).json({ error: 'Player not found' });
+  // Require PIN header for private prediction data
+  if (player.pin) {
+    const pin = req.headers['x-player-pin'];
+    if (String(pin) !== String(player.pin)) return res.status(401).json({ error: 'PIN required' });
+  }
   res.json({
     predictions: db.predictions[req.params.playerId] || {},
     outright_preds: db.outright_preds[req.params.playerId] || {},
   });
 });
 
-// Save a player's predictions (respects per-match lock)
 app.post('/api/predictions/:playerId', (req, res) => {
   const db = loadDB();
   const player = db.players.find(p => p.id === req.params.playerId);
   if (!player) return res.status(404).json({ error: 'Player not found' });
+  // Require PIN
+  if (player.pin) {
+    const pin = req.headers['x-player-pin'] || req.body?.pin;
+    if (String(pin) !== String(player.pin)) return res.status(401).json({ error: 'PIN required' });
+  }
 
   const { predictions, outright_preds } = req.body;
   let saved = 0, locked = 0;
@@ -190,7 +207,6 @@ app.post('/api/predictions/:playerId', (req, res) => {
   }
 
   if (outright_preds) {
-    // Outrights lock when tournament starts (first match kickoff)
     const tournamentStarted = isMatchLocked(MATCHES[0].id);
     if (!tournamentStarted) {
       if (!db.outright_preds[req.params.playerId]) db.outright_preds[req.params.playerId] = {};
@@ -204,7 +220,6 @@ app.post('/api/predictions/:playerId', (req, res) => {
   res.json({ saved, locked, message: locked > 0 ? `${locked} matches already locked` : 'Saved successfully' });
 });
 
-// All predictions (for the predictions view page)
 app.get('/api/all-predictions', (req, res) => {
   const db = loadDB();
   res.json({
@@ -215,7 +230,6 @@ app.get('/api/all-predictions', (req, res) => {
   });
 });
 
-// Lock status for all matches
 app.get('/api/locks', (req, res) => {
   const locks = {};
   MATCHES.forEach(m => { locks[m.id] = isMatchLocked(m.id); });
@@ -224,20 +238,34 @@ app.get('/api/locks', (req, res) => {
 
 // ─── ADMIN ROUTES ─────────────────────────────────────────────────────────────
 
-// Add player
+// Add player (admin sets the PIN too)
 app.post('/api/admin/players', adminAuth, (req, res) => {
   const db = loadDB();
-  const { name } = req.body;
+  const { name, pin } = req.body;
   if (!name || !name.trim()) return res.status(400).json({ error: 'Name required' });
   if (db.players.find(p => p.name.toLowerCase() === name.trim().toLowerCase()))
     return res.status(409).json({ error: 'Player already exists' });
-  const player = { id: 'p_' + Date.now(), name: name.trim(), createdAt: new Date().toISOString() };
+  if (pin && (String(pin).length < 4 || String(pin).length > 6 || !/^\d+$/.test(String(pin))))
+    return res.status(400).json({ error: 'PIN must be 4-6 digits' });
+  const player = { id: 'p_' + Date.now(), name: name.trim(), pin: pin ? String(pin) : null, createdAt: new Date().toISOString() };
   db.players.push(player);
   saveDB(db);
-  res.json({ player });
+  res.json({ player: { id: player.id, name: player.name, hasPin: !!player.pin } });
 });
 
-// Remove player
+// Update player PIN
+app.patch('/api/admin/players/:id/pin', adminAuth, (req, res) => {
+  const db = loadDB();
+  const player = db.players.find(p => p.id === req.params.id);
+  if (!player) return res.status(404).json({ error: 'Player not found' });
+  const { pin } = req.body;
+  if (pin && (String(pin).length < 4 || String(pin).length > 6 || !/^\d+$/.test(String(pin))))
+    return res.status(400).json({ error: 'PIN must be 4-6 digits' });
+  player.pin = pin ? String(pin) : null;
+  saveDB(db);
+  res.json({ ok: true });
+});
+
 app.delete('/api/admin/players/:id', adminAuth, (req, res) => {
   const db = loadDB();
   db.players = db.players.filter(p => p.id !== req.params.id);
@@ -247,20 +275,16 @@ app.delete('/api/admin/players/:id', adminAuth, (req, res) => {
   res.json({ ok: true });
 });
 
-// Set outright answers
 app.post('/api/admin/outrights', adminAuth, (req, res) => {
   const db = loadDB();
-  const { answers } = req.body;
-  Object.assign(db.outright_answers, answers);
+  Object.assign(db.outright_answers, req.body.answers);
   saveDB(db);
   res.json({ ok: true });
 });
 
-// Enter match results manually
 app.post('/api/admin/results', adminAuth, (req, res) => {
   const db = loadDB();
-  const { results } = req.body;
-  for (const [mid, r] of Object.entries(results)) {
+  for (const [mid, r] of Object.entries(req.body.results)) {
     if (r.homeScore !== '' && r.awayScore !== '' && r.status) {
       db.results[mid] = {
         homeScore: parseInt(r.homeScore),
@@ -271,20 +295,9 @@ app.post('/api/admin/results', adminAuth, (req, res) => {
     }
   }
   saveDB(db);
-  res.json({ ok: true, updated: Object.keys(results).length });
-});
-
-// Update match team names (for knockout brackets)
-app.post('/api/admin/match-names', adminAuth, (req, res) => {
-  const { updates } = req.body; // [{ id, home, away }]
-  updates.forEach(u => {
-    const m = MATCHES.find(m => m.id == u.id);
-    if (m) { if (u.home) m.home = u.home; if (u.away) m.away = u.away; }
-  });
   res.json({ ok: true });
 });
 
-// Trigger live sync
 app.post('/api/admin/sync', adminAuth, async (req, res) => {
   const db = loadDB();
   if (req.body.apiKey) { db.apiKey = req.body.apiKey; saveDB(db); }
@@ -292,7 +305,6 @@ app.post('/api/admin/sync', adminAuth, async (req, res) => {
   res.json(result);
 });
 
-// Set API key
 app.post('/api/admin/apikey', adminAuth, (req, res) => {
   const db = loadDB();
   db.apiKey = req.body.apiKey || '';
@@ -300,21 +312,17 @@ app.post('/api/admin/apikey', adminAuth, (req, res) => {
   res.json({ ok: true });
 });
 
-// Export full DB
 app.get('/api/admin/export', adminAuth, (req, res) => {
   const db = loadDB();
   res.setHeader('Content-Disposition', 'attachment; filename="wc2026_backup.json"');
   res.json(db);
 });
 
-// Import DB
 app.post('/api/admin/import', adminAuth, (req, res) => {
-  const db = req.body;
-  saveDB(db);
+  saveDB(req.body);
   res.json({ ok: true });
 });
 
-// ─── Serve frontend ───────────────────────────────────────────────────────────
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
