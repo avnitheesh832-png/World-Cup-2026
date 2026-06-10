@@ -70,7 +70,7 @@ function calcScore(db, playerId) {
     const res = db.results[mid];
     if (!res || !res.status || res.status === '') continue;
     if (pred.result === res.result) matchResult++;
-    if (String(pred.homeScore) === String(res.homeScore) && String(pred.awayScore) === String(res.awayScore)) correctScore++;
+    if (String(pred.homeScore) === String(res.homeScore) && String(pred.awayScore) === String(res.awayScore)) correctScore += 3;
   }
   const opreds = db.outright_preds[playerId] || {};
   for (const [oid, val] of Object.entries(opreds)) {
