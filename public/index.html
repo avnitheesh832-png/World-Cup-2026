@@ -9,16 +9,32 @@
 *{box-sizing:border-box;margin:0;padding:0}body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;font-size:14px;min-height:100vh}input,select,button{font-family:inherit}
 .nav{display:flex;align-items:center;justify-content:space-between;padding:0 20px;height:52px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:200;gap:12px}
 .nav-logo{font-size:15px;font-weight:800;letter-spacing:-.4px;white-space:nowrap}.nav-logo span{color:var(--gold)}
-.nav-player{font-size:13px;color:var(--text2);background:var(--surface2);border:1px solid var(--border2);border-radius:20px;padding:4px 12px;white-space:nowrap;max-width:160px;overflow:hidden;text-overflow:ellipsis}
+.nav-player{font-size:13px;color:var(--text2);background:var(--surface2);border:1px solid var(--border2);border-radius:20px;padding:4px 12px;white-space:nowrap;max-width:160px;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.nav-player:hover{border-color:var(--gold);color:var(--gold)}
 .nav-tabs{display:flex;gap:2px}.nav-tab{padding:5px 12px;border-radius:6px;cursor:pointer;color:var(--text2);font-size:13px;border:none;background:none;white-space:nowrap}.nav-tab:hover{color:var(--text);background:var(--surface)}.nav-tab.active{color:var(--text);background:var(--surface2)}
 .page{display:none;max-width:880px;margin:0 auto;padding:28px 18px}.page.active{display:block}
-.hero-screen{min-height:calc(100vh - 52px);display:flex;align-items:center;justify-content:center;padding:32px 18px}
+.hero-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:32px 18px;background:var(--bg)}
 .hero-card{background:var(--surface);border:1px solid var(--border2);border-radius:var(--rl);padding:36px 32px;max-width:440px;width:100%;text-align:center}
 .hero-icon{font-size:48px;margin-bottom:16px}.hero-title{font-size:26px;font-weight:800;margin-bottom:6px}.hero-sub{font-size:14px;color:var(--text2);margin-bottom:28px;line-height:1.6}
 .player-list{display:flex;flex-direction:column;gap:8px;margin-bottom:20px;text-align:left}
 .player-btn{padding:12px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);cursor:pointer;color:var(--text);font-size:14px;font-weight:500;text-align:left;transition:all .15s;display:flex;justify-content:space-between;align-items:center;width:100%}
-.player-btn:hover{background:var(--surface3);border-color:var(--gold);color:var(--gold)}.player-btn .sdot{width:8px;height:8px;border-radius:50%;background:var(--text3);flex-shrink:0}.player-btn.has-preds .sdot{background:var(--green)}
+.player-btn:hover{background:var(--surface3);border-color:var(--gold);color:var(--gold)}
+.lock-icon{font-size:13px;opacity:.5}
 .divider{display:flex;align-items:center;gap:10px;color:var(--text3);font-size:12px;margin:8px 0}.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.pin-screen{display:none;flex-direction:column;align-items:center;gap:16px;padding:8px 0}
+.pin-name{font-size:18px;font-weight:700;margin-bottom:4px}
+.pin-sub{font-size:13px;color:var(--text2);margin-bottom:8px}
+.pin-dots{display:flex;gap:12px;justify-content:center;margin-bottom:8px}
+.pin-dot{width:16px;height:16px;border-radius:50%;border:2px solid var(--border2);transition:all .15s}
+.pin-dot.filled{background:var(--gold);border-color:var(--gold)}
+.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:240px;width:100%}
+.pin-key{padding:16px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);cursor:pointer;font-size:20px;font-weight:700;text-align:center;transition:all .1s}
+.pin-key:hover{background:var(--surface3);border-color:var(--gold)}
+.pin-key:active{transform:scale(.95)}
+.pin-key.del{font-size:16px;color:var(--text2)}
+.pin-error{font-size:13px;color:var(--red);min-height:18px;text-align:center}
+.pin-back{font-size:13px;color:var(--text2);cursor:pointer;padding:4px 8px;border-radius:6px;background:none;border:none}
+.pin-back:hover{color:var(--text)}
 .page-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:24px;gap:12px;flex-wrap:wrap}.page-title{font-size:20px;font-weight:800}.page-sub{font-size:13px;color:var(--text2);margin-top:3px}
 .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px}.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px}.stat-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}.stat-val{font-size:22px;font-weight:800}.stat-sub{font-size:11px;color:var(--text2);margin-top:2px}
 .podium{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:24px}.podium-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:16px;text-align:center}.podium-card.p1{border-color:var(--gold);background:linear-gradient(160deg,rgba(240,192,64,.08) 0%,var(--surface) 60%)}.podium-card.p2{border-color:#7a8090}.podium-card.p3{border-color:#8a5520}.podium-rank{font-size:22px;margin-bottom:4px}.podium-name{font-size:14px;font-weight:700;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.podium-pts{font-size:28px;font-weight:900;color:var(--gold)}.podium-breakdown{font-size:11px;color:var(--text3);margin-top:4px}
@@ -44,21 +60,43 @@
 .loading{display:flex;align-items:center;justify-content:center;min-height:200px;color:var(--text3);font-size:14px;gap:10px}.spinner{width:16px;height:16px;border:2px solid var(--border2);border-top-color:var(--gold);border-radius:50%;animation:spin .6s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
 .last-sync{font-size:11px;color:var(--text3);margin-top:6px}
 @media(max-width:600px){.stats-row{grid-template-columns:1fr 1fr}.podium{grid-template-columns:1fr}.outright-grid{grid-template-columns:1fr}.nav-tab{padding:5px 8px;font-size:12px}}
-</style></head>
+</style>
+</head>
 <body>
+
+<!-- PLAYER SELECT SCREEN -->
 <div id="select-screen">
   <div class="hero-screen">
     <div class="hero-card">
       <div class="hero-icon">⚽</div>
       <div class="hero-title">World Cup 2026</div>
-      <div class="hero-sub">Pick your name to enter predictions or check the leaderboard.</div>
+      <div class="hero-sub">Select your name to enter predictions and check the leaderboard.</div>
       <div class="player-list" id="player-select-list"><div class="loading"><span class="spinner"></span> Loading...</div></div>
       <div class="divider">or</div>
-      <button class="btn" style="width:100%" onclick="viewOnly()">👀 Just view the leaderboard</button>
+      <button class="btn" style="width:100%" onclick="viewOnly()">👀 View leaderboard only</button>
+
+      <!-- PIN entry (shown after selecting a player who has a PIN) -->
+      <div class="pin-screen" id="pin-screen">
+        <div class="pin-name" id="pin-player-name"></div>
+        <div class="pin-sub">Enter your 4-digit PIN</div>
+        <div class="pin-dots" id="pin-dots">
+          <div class="pin-dot" id="dot0"></div><div class="pin-dot" id="dot1"></div>
+          <div class="pin-dot" id="dot2"></div><div class="pin-dot" id="dot3"></div>
+        </div>
+        <div class="pin-error" id="pin-error"></div>
+        <div class="pin-pad">
+          <button class="pin-key" onclick="pinKey('1')">1</button><button class="pin-key" onclick="pinKey('2')">2</button><button class="pin-key" onclick="pinKey('3')">3</button>
+          <button class="pin-key" onclick="pinKey('4')">4</button><button class="pin-key" onclick="pinKey('5')">5</button><button class="pin-key" onclick="pinKey('6')">6</button>
+          <button class="pin-key" onclick="pinKey('7')">7</button><button class="pin-key" onclick="pinKey('8')">8</button><button class="pin-key" onclick="pinKey('9')">9</button>
+          <button class="pin-key del" onclick="pinBack()">←</button><button class="pin-key" onclick="pinKey('0')">0</button><button class="pin-key del" onclick="pinClear()">✕</button>
+        </div>
+        <button class="pin-back" onclick="showPlayerList()">← Back to player list</button>
+      </div>
     </div>
   </div>
 </div>
- 
+
+<!-- MAIN APP -->
 <div id="main-app" style="display:none">
   <div class="nav">
     <div class="nav-logo">⚽ WC<span>2026</span></div>
@@ -69,9 +107,9 @@
       <button class="nav-tab" onclick="nav('all-preds',this)">All picks</button>
       <button class="nav-tab" onclick="nav('admin',this)">⚙</button>
     </div>
-    <div class="nav-player" id="nav-player-name" style="display:none"></div>
+    <div class="nav-player" id="nav-player-name" style="display:none" onclick="switchPlayer()" title="Switch player">👤 <span id="nav-player-label"></span></div>
   </div>
- 
+
   <div id="page-leaderboard" class="page active">
     <div class="page-header">
       <div><div class="page-title">Leaderboard</div><div class="page-sub" id="lb-sub">—</div></div>
@@ -82,22 +120,22 @@
     <table class="lb-table"><thead><tr><th>#</th><th>Player</th><th style="text-align:right">Pts</th><th>Results</th><th>Scores</th><th>Outrights</th></tr></thead><tbody id="lb-body"></tbody></table>
     <div class="last-sync" id="last-sync-label"></div>
   </div>
- 
+
   <div id="page-predict" class="page">
     <div class="page-header">
-      <div><div class="page-title" id="predict-title">My Predictions</div><div class="page-sub">1 pt per correct result · 1 pt per correct score</div></div>
+      <div><div class="page-title" id="predict-title">My Predictions</div><div class="page-sub">1 pt correct result · 1 pt correct score</div></div>
     </div>
     <div class="stage-tabs" id="stage-tabs"></div>
     <div id="matches-container"></div>
     <div class="save-bar"><div class="save-bar-info"><strong id="save-count">0</strong> predictions this stage</div><button class="btn-save" id="save-btn" onclick="savePredictions()">Save predictions</button></div>
   </div>
- 
+
   <div id="page-outrights" class="page">
     <div class="page-header"><div><div class="page-title">Outright Predictions</div><div class="page-sub">10 pts each · locks when tournament kicks off</div></div></div>
     <div class="outright-grid" id="outright-pred-grid"></div>
     <div class="save-bar"><div class="save-bar-info">10 outrights · 10 pts each</div><button class="btn-save" onclick="saveOutrights()">Save outrights</button></div>
   </div>
- 
+
   <div id="page-all-preds" class="page">
     <div class="page-header"><div><div class="page-title">All Predictions</div><div class="page-sub">Everyone's picks vs actual results</div></div></div>
     <div class="pred-filter-row">
@@ -107,7 +145,7 @@
     </div>
     <div id="all-preds-container"></div>
   </div>
- 
+
   <div id="page-admin" class="page">
     <div class="page-header"><div><div class="page-title">Admin</div></div></div>
     <div class="admin-block">
@@ -121,7 +159,7 @@
     <div id="admin-content" style="display:none">
       <div class="admin-block">
         <div class="admin-block-title">Live results feed <span class="badge-sm">API-Football</span></div>
-        <div class="info-box">Free key at <a href="https://www.api-football.com" target="_blank">api-football.com</a> (100 req/day). Server auto-syncs every 3 min during the tournament. <strong>Scores update for everyone automatically.</strong></div>
+        <div class="info-box">Free key at <a href="https://www.api-football.com" target="_blank">api-football.com</a>. Server auto-syncs every 3 min during the tournament.</div>
         <div class="input-row">
           <input class="txt-inp" id="api-key-inp" placeholder="API-Football key" style="max-width:320px">
           <button class="btn btn-primary" onclick="saveApiKey()">Save key</button>
@@ -130,7 +168,12 @@
       </div>
       <div class="admin-block">
         <div class="admin-block-title">Players <span class="badge-sm" id="player-count">0</span></div>
-        <div class="input-row"><input class="txt-inp" id="new-player-inp" placeholder="Player name" onkeydown="if(event.key==='Enter')addPlayer()" style="max-width:240px"><button class="btn btn-primary" onclick="addPlayer()">Add player</button></div>
+        <div class="info-box"><strong>Each player gets a PIN</strong> — only they can enter predictions under their name. Share each person's PIN privately (e.g. over WhatsApp). Everyone can still see the leaderboard and all picks without a PIN.</div>
+        <div class="input-row" style="margin-bottom:8px">
+          <input class="txt-inp" id="new-player-inp" placeholder="Player name" style="max-width:200px" onkeydown="if(event.key==='Enter')addPlayer()">
+          <input class="txt-inp" id="new-player-pin" placeholder="4-digit PIN" type="number" style="max-width:120px" maxlength="4">
+          <button class="btn btn-primary" onclick="addPlayer()">Add player</button>
+        </div>
         <div class="chips" id="player-chips"></div>
       </div>
       <div class="admin-block">
@@ -153,46 +196,169 @@
     </div>
   </div>
 </div>
- 
+
 <div class="toast" id="toast"></div>
 <script>
-let config=null,allData=null,locks={},currentPlayer=null,myPreds={},myOutrightPreds={},adminUnlocked=false,currentStage='Group Stage';
+let config=null,allData=null,locks={},currentPlayer=null,currentPin=null,myPreds={},myOutrightPreds={},adminUnlocked=false,currentStage='Group Stage';
+let pinBuffer='',pinTarget=null;
 const STAGES=['Group Stage','Round of 32','Round of 16','Quarter-finals','Semi-finals','Final'];
-async function boot(){try{config=await api('/api/config');locks=(await api('/api/locks')).locks;renderSelectList();setInterval(async()=>{locks=(await api('/api/locks')).locks;},60000);}catch(e){document.getElementById('player-select-list').innerHTML='<div style="color:var(--red);font-size:13px">Cannot connect to server. Make sure it is running.</div>';}}
-function renderSelectList(){const el=document.getElementById('player-select-list');if(!config.players.length){el.innerHTML='<div style="color:var(--text3);font-size:13px;text-align:center;padding:12px 0">No players yet — admin needs to add players first.</div>';return;}el.innerHTML=config.players.map(p=>`<button class="player-btn" onclick="selectPlayer('${p.id}','${esc(p.name)}')">${esc(p.name)}<span class="sdot"></span></button>`).join('');}
-async function selectPlayer(id,name){currentPlayer={id,name};try{const d=await api('/api/predictions/'+id);myPreds=d.predictions||{};myOutrightPreds=d.outright_preds||{};}catch{myPreds={};myOutrightPreds={};}document.getElementById('nav-player-name').textContent=name;document.getElementById('nav-player-name').style.display='block';document.getElementById('nav-predict').style.display='';document.getElementById('nav-outrights').style.display='';showApp();nav('predict',document.getElementById('nav-predict'));}
+
+async function boot(){
+  try{
+    config=await api('/api/config');
+    locks=(await api('/api/locks')).locks;
+    renderSelectList();
+    setInterval(async()=>{locks=(await api('/api/locks')).locks;},60000);
+  }catch(e){
+    document.getElementById('player-select-list').innerHTML='<div style="color:var(--red);font-size:13px">Cannot connect to server.</div>';
+  }
+}
+
+function renderSelectList(){
+  const el=document.getElementById('player-select-list');
+  if(!config.players.length){el.innerHTML='<div style="color:var(--text3);font-size:13px;text-align:center;padding:12px 0">No players yet — admin needs to add players first.</div>';return;}
+  el.innerHTML=config.players.map(p=>`<button class="player-btn" onclick="selectPlayer('${p.id}','${esc(p.name)}',${p.hasPin})">${esc(p.name)}<span class="lock-icon">${p.hasPin?'🔒':''}</span></button>`).join('');
+}
+
+function showPlayerList(){
+  document.getElementById('pin-screen').style.display='none';
+  document.getElementById('player-select-list').style.display='flex';
+  pinBuffer='';pinTarget=null;
+  document.getElementById('pin-error').textContent='';
+}
+
+function selectPlayer(id,name,hasPin){
+  if(hasPin){
+    pinTarget={id,name};
+    pinBuffer='';
+    document.getElementById('pin-player-name').textContent=name;
+    document.getElementById('pin-error').textContent='';
+    updatePinDots();
+    document.getElementById('player-select-list').style.display='none';
+    const ps=document.getElementById('pin-screen');
+    ps.style.display='flex';
+    ps.style.flexDirection='column';
+    ps.style.alignItems='center';
+  } else {
+    finishLogin(id,name,null);
+  }
+}
+
+function updatePinDots(){
+  for(let i=0;i<4;i++){
+    const d=document.getElementById('dot'+i);
+    d.classList.toggle('filled',i<pinBuffer.length);
+  }
+}
+
+function pinKey(k){
+  if(pinBuffer.length>=4)return;
+  pinBuffer+=k;
+  updatePinDots();
+  if(pinBuffer.length===4)submitPin();
+}
+
+function pinBack(){pinBuffer=pinBuffer.slice(0,-1);updatePinDots();}
+function pinClear(){pinBuffer='';updatePinDots();}
+
+async function submitPin(){
+  document.getElementById('pin-error').textContent='';
+  try{
+    await api(`/api/verify-pin/${pinTarget.id}`,'POST',{pin:pinBuffer});
+    finishLogin(pinTarget.id,pinTarget.name,pinBuffer);
+  }catch(e){
+    document.getElementById('pin-error').textContent='Wrong PIN — try again';
+    pinBuffer='';updatePinDots();
+  }
+}
+
+async function finishLogin(id,name,pin){
+  currentPlayer={id,name};currentPin=pin;
+  try{
+    const headers=pin?{'x-player-pin':pin}:{};
+    const d=await apiH(`/api/predictions/${id}`,headers);
+    myPreds=d.predictions||{};myOutrightPreds=d.outright_preds||{};
+  }catch{myPreds={};myOutrightPreds={};}
+  document.getElementById('nav-player-label').textContent=name;
+  document.getElementById('nav-player-name').style.display='flex';
+  document.getElementById('nav-predict').style.display='';
+  document.getElementById('nav-outrights').style.display='';
+  showApp();nav('predict',document.getElementById('nav-predict'));
+}
+
+function switchPlayer(){
+  currentPlayer=null;currentPin=null;myPreds={};myOutrightPreds={};
+  document.getElementById('nav-player-name').style.display='none';
+  document.getElementById('nav-predict').style.display='none';
+  document.getElementById('nav-outrights').style.display='none';
+  document.getElementById('main-app').style.display='none';
+  document.getElementById('select-screen').style.display='block';
+  showPlayerList();
+}
+
 function viewOnly(){currentPlayer=null;showApp();nav('leaderboard',document.querySelector('.nav-tab'));}
-function showApp(){document.getElementById('select-screen').style.display='none';document.getElementById('main-app').style.display='block';loadLeaderboard();}
-function nav(page,el){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));document.getElementById('page-'+page).classList.add('active');if(el)el.classList.add('active');if(page==='leaderboard')loadLeaderboard();if(page==='predict')renderPredictPage();if(page==='outrights')renderOutrightsPage();if(page==='all-preds')loadAllPreds();if(page==='admin')renderAdminPage();}
-async function loadLeaderboard(){try{const lb=await api('/api/leaderboard');document.getElementById('lb-sub').textContent=`${lb.completedMatches} matches done · ${lb.liveMatches>0?lb.liveMatches+' LIVE · ':''}${lb.scores.length} players`;document.getElementById('stats-row').innerHTML=`<div class="stat-card"><div class="stat-label">Matches done</div><div class="stat-val">${lb.completedMatches}</div><div class="stat-sub">of ${lb.totalMatches}</div></div><div class="stat-card"><div class="stat-label">Players</div><div class="stat-val">${lb.scores.length}</div><div class="stat-sub">competing</div></div><div class="stat-card"><div class="stat-label">Leader</div><div class="stat-val" style="font-size:16px;white-space:nowrap;overflow:hidden">${lb.scores[0]?esc(lb.scores[0].name):'—'}</div><div class="stat-sub">${lb.scores[0]?lb.scores[0].total+' pts':''}</div></div><div class="stat-card"><div class="stat-label">Outrights</div><div class="stat-val">10</div><div class="stat-sub">× 10 pts each</div></div>`;const icons=['🥇','🥈','🥉'],cls=['p1','p2','p3'],top3=lb.scores.slice(0,3);document.getElementById('podium').innerHTML=top3.length?top3.map((s,i)=>`<div class="podium-card ${cls[i]}"><div class="podium-rank">${icons[i]}</div><div class="podium-name">${esc(s.name)}</div><div class="podium-pts">${s.total}</div><div class="podium-breakdown">${s.matchResult} results · ${s.correctScore} scores · ${s.outrightPts}pt out.</div></div>`).join(''):'<div style="grid-column:1/-1;color:var(--text3);text-align:center;padding:20px">No players yet</div>';document.getElementById('lb-body').innerHTML=lb.scores.map((s,i)=>`<tr class="${currentPlayer&&s.id===currentPlayer.id?'me':''}"><td><span class="rank-n">${i+1}</span></td><td style="font-weight:600">${esc(s.name)}${currentPlayer&&s.id===currentPlayer.id?' <span style="font-size:11px;color:var(--gold)">(you)</span>':''}</td><td style="text-align:right"><span class="pts-big">${s.total}</span></td><td><span class="pill pm">${s.matchResult}</span></td><td><span class="pill ps">${s.correctScore}</span></td><td><span class="pill po">${s.outrightPts}pts</span></td></tr>`).join('');if(lb.lastSync)document.getElementById('last-sync-label').textContent='Last synced: '+new Date(lb.lastSync).toLocaleTimeString();}catch(e){console.error(e);}}
+
+function showApp(){
+  document.getElementById('select-screen').style.display='none';
+  document.getElementById('main-app').style.display='block';
+  loadLeaderboard();
+}
+
+function nav(page,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  if(el)el.classList.add('active');
+  if(page==='leaderboard')loadLeaderboard();
+  if(page==='predict')renderPredictPage();
+  if(page==='outrights')renderOutrightsPage();
+  if(page==='all-preds')loadAllPreds();
+  if(page==='admin')renderAdminPage();
+}
+
+async function loadLeaderboard(){
+  try{
+    const lb=await api('/api/leaderboard');
+    document.getElementById('lb-sub').textContent=`${lb.completedMatches} matches done · ${lb.liveMatches>0?lb.liveMatches+' LIVE · ':''}${lb.scores.length} players`;
+    document.getElementById('stats-row').innerHTML=`<div class="stat-card"><div class="stat-label">Matches done</div><div class="stat-val">${lb.completedMatches}</div><div class="stat-sub">of ${lb.totalMatches}</div></div><div class="stat-card"><div class="stat-label">Players</div><div class="stat-val">${lb.scores.length}</div><div class="stat-sub">competing</div></div><div class="stat-card"><div class="stat-label">Leader</div><div class="stat-val" style="font-size:16px;white-space:nowrap;overflow:hidden">${lb.scores[0]?esc(lb.scores[0].name):'—'}</div><div class="stat-sub">${lb.scores[0]?lb.scores[0].total+' pts':''}</div></div><div class="stat-card"><div class="stat-label">Outrights</div><div class="stat-val">10</div><div class="stat-sub">× 10 pts each</div></div>`;
+    const icons=['🥇','🥈','🥉'],cls=['p1','p2','p3'],top3=lb.scores.slice(0,3);
+    document.getElementById('podium').innerHTML=top3.length?top3.map((s,i)=>`<div class="podium-card ${cls[i]}"><div class="podium-rank">${icons[i]}</div><div class="podium-name">${esc(s.name)}</div><div class="podium-pts">${s.total}</div><div class="podium-breakdown">${s.matchResult} results · ${s.correctScore} scores · ${s.outrightPts}pt out.</div></div>`).join(''):'<div style="grid-column:1/-1;color:var(--text3);text-align:center;padding:20px">No players yet</div>';
+    document.getElementById('lb-body').innerHTML=lb.scores.map((s,i)=>`<tr class="${currentPlayer&&s.id===currentPlayer.id?'me':''}"><td><span class="rank-n">${i+1}</span></td><td style="font-weight:600">${esc(s.name)}${currentPlayer&&s.id===currentPlayer.id?' <span style="font-size:11px;color:var(--gold)">(you)</span>':''}</td><td style="text-align:right"><span class="pts-big">${s.total}</span></td><td><span class="pill pm">${s.matchResult}</span></td><td><span class="pill ps">${s.correctScore}</span></td><td><span class="pill po">${s.outrightPts}pts</span></td></tr>`).join('');
+    if(lb.lastSync)document.getElementById('last-sync-label').textContent='Last synced: '+new Date(lb.lastSync).toLocaleTimeString();
+  }catch(e){console.error(e);}
+}
+
 function renderPredictPage(){if(!currentPlayer)return;document.getElementById('predict-title').textContent=currentPlayer.name+"'s Predictions";renderStageTabs();renderMatchCards();}
 function renderStageTabs(){document.getElementById('stage-tabs').innerHTML=STAGES.map(s=>{const sm=config.matches.filter(m=>m.stage===s);const done=sm.filter(m=>myPreds[m.id]&&myPreds[m.id].result!==undefined&&myPreds[m.id].result!=='').length;const allLocked=sm.length>0&&sm.every(m=>locks[m.id]);return`<button class="stage-tab ${s===currentStage?'active':''}" onclick="switchStage('${s}',this)">${s}${done>0?`<span class="done-ct">${done}/${sm.length}</span>`:''}${allLocked?`<span class="lock-ct">🔒</span>`:''}</button>`;}).join('');}
 function switchStage(stage,el){currentStage=stage;document.querySelectorAll('.stage-tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');renderMatchCards();}
 function renderMatchCards(){const matches=config.matches.filter(m=>m.stage===currentStage);let html='',lastGroup=null,filled=0;matches.forEach(m=>{if(m.group&&m.group!==lastGroup){html+=`<div class="group-label">${m.group}</div>`;lastGroup=m.group;}const pred=myPreds[m.id]||{};const locked=locks[m.id];const hs=pred.homeScore!==undefined&&pred.homeScore!==''?pred.homeScore:'';const as=pred.awayScore!==undefined&&pred.awayScore!==''?pred.awayScore:'';const res=pred.result||'';if(res)filled++;const d=locked?'disabled':'';const ko=m.kickoff?new Date(m.kickoff).toLocaleString(undefined,{weekday:'short',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):'';html+=`<div class="match-card ${locked?'locked':''}" id="mc-${m.id}"><div class="match-card-head"><span>${ko}</span><span>${locked?'🔒 Locked':''}</span></div><div class="match-card-body"><div class="team-name">${m.home}</div><div class="score-entry"><input class="score-inp" id="hs-${m.id}" type="number" min="0" max="20" value="${hs}" ${d} oninput="onScore(${m.id})" placeholder="0"><span class="score-sep">–</span><input class="score-inp" id="as-${m.id}" type="number" min="0" max="20" value="${as}" ${d} oninput="onScore(${m.id})" placeholder="0"></div><div class="team-name right">${m.away}</div></div><div class="result-pills"><button class="rpill ${res==='H'?'sel-H':''}" id="rH-${m.id}" onclick="setResult(${m.id},'H')" ${d}>Home win</button><button class="rpill ${res==='D'?'sel-D':''}" id="rD-${m.id}" onclick="setResult(${m.id},'D')" ${d}>Draw</button><button class="rpill ${res==='A'?'sel-A':''}" id="rA-${m.id}" onclick="setResult(${m.id},'A')" ${d}>Away win</button></div></div>`;});document.getElementById('matches-container').innerHTML=html||'<div class="empty"><h3>No matches in this stage yet</h3></div>';document.getElementById('save-count').textContent=filled;}
 function onScore(mid){const h=parseInt(document.getElementById('hs-'+mid)?.value);const a=parseInt(document.getElementById('as-'+mid)?.value);if(!isNaN(h)&&!isNaN(a))setResult(mid,h>a?'H':h<a?'A':'D',true);}
 function setResult(mid,r){if(locks[mid])return;if(!myPreds[mid])myPreds[mid]={};const hs=document.getElementById('hs-'+mid)?.value;const as=document.getElementById('as-'+mid)?.value;myPreds[mid].result=r;if(hs!==''&&hs!==undefined)myPreds[mid].homeScore=parseInt(hs);if(as!==''&&as!==undefined)myPreds[mid].awayScore=parseInt(as);['H','D','A'].forEach(x=>{const b=document.getElementById('r'+x+'-'+mid);if(b)b.className='rpill'+(x===r?' sel-'+x:'');});const sm=config.matches.filter(m=>m.stage===currentStage);document.getElementById('save-count').textContent=sm.filter(m=>myPreds[m.id]&&myPreds[m.id].result!=='').length;}
-async function savePredictions(){if(!currentPlayer)return;const btn=document.getElementById('save-btn');btn.disabled=true;btn.textContent='Saving...';try{const sm=config.matches.filter(m=>m.stage===currentStage);const toSave={};sm.forEach(m=>{if(myPreds[m.id]&&!locks[m.id])toSave[m.id]=myPreds[m.id];});const res=await api('/api/predictions/'+currentPlayer.id,'POST',{predictions:toSave});showToast(res.locked>0?`Saved! (${res.locked} matches locked)`:'Saved!','ok');renderStageTabs();}catch(e){showToast('Save failed: '+e.message,'err');}btn.disabled=false;btn.textContent='Save predictions';}
+async function savePredictions(){if(!currentPlayer)return;const btn=document.getElementById('save-btn');btn.disabled=true;btn.textContent='Saving...';try{const sm=config.matches.filter(m=>m.stage===currentStage);const toSave={};sm.forEach(m=>{if(myPreds[m.id]&&!locks[m.id])toSave[m.id]=myPreds[m.id];});const headers=currentPin?{'x-player-pin':currentPin}:{};const res=await apiH(`/api/predictions/${currentPlayer.id}`,headers,'POST',{predictions:toSave});showToast(res.locked>0?`Saved! (${res.locked} locked)`:'Saved! ✓','ok');renderStageTabs();}catch(e){showToast('Save failed: '+e.message,'err');}btn.disabled=false;btn.textContent='Save predictions';}
 function renderOutrightsPage(){if(!currentPlayer)return;if(allData)return renderOutrightsGrid(allData.outright_answers);api('/api/all-predictions').then(d=>{allData=d;renderOutrightsGrid(d.outright_answers);});}
 function renderOutrightsGrid(answers){const locked=locks[config.matches[0]?.id];document.getElementById('outright-pred-grid').innerHTML=config.outrights.map(o=>{const pred=myOutrightPreds[o.id]||'';const ans=answers?.[o.id];const hit=ans&&pred&&ans.toLowerCase()===pred.toLowerCase();return`<div class="outright-card"><div class="outright-label">${o.label} <span class="outright-pts">+${o.pts}pts</span></div><input class="outright-inp" id="op-${o.id}" value="${esc(pred)}" placeholder="Your prediction…" ${locked?'disabled':''}/>${ans?`<div class="outright-answer ${hit?'outright-hit':''}">${hit?'✓ Correct! ':'Actual: '}${esc(ans)}</div>`:''}</div>`;}).join('');}
-async function saveOutrights(){if(!currentPlayer)return;const preds={};config.outrights.forEach(o=>{const i=document.getElementById('op-'+o.id);if(i)preds[o.id]=i.value.trim();});Object.assign(myOutrightPreds,preds);try{await api('/api/predictions/'+currentPlayer.id,'POST',{outright_preds:preds});showToast('Outrights saved!','ok');}catch(e){showToast('Save failed','err');}}
+async function saveOutrights(){if(!currentPlayer)return;const preds={};config.outrights.forEach(o=>{const i=document.getElementById('op-'+o.id);if(i)preds[o.id]=i.value.trim();});Object.assign(myOutrightPreds,preds);try{const headers=currentPin?{'x-player-pin':currentPin}:{};await apiH(`/api/predictions/${currentPlayer.id}`,headers,'POST',{outright_preds:preds});showToast('Outrights saved! ✓','ok');}catch(e){showToast('Save failed','err');}}
 async function loadAllPreds(){document.getElementById('all-preds-container').innerHTML='<div class="loading"><span class="spinner"></span> Loading…</div>';allData=await api('/api/all-predictions');renderAllPreds();}
-function renderAllPreds(){if(!allData||!config)return;const search=document.getElementById('pred-search')?.value.toLowerCase()||'';const stageF=document.getElementById('pred-stage-filter')?.value||'';const statusF=document.getElementById('pred-status-filter')?.value||'';let matches=config.matches.filter(m=>{if(search&&!m.home.toLowerCase().includes(search)&&!m.away.toLowerCase().includes(search))return false;if(stageF&&m.stage!==stageF)return false;const r=allData.results[m.id];if(statusF==='done'&&(!r||r.status!=='FT'))return false;if(statusF==='pending'&&r&&r.status==='FT')return false;return true;}).slice(0,80);const players=config.players;if(!matches.length){document.getElementById('all-preds-container').innerHTML='<div class="empty"><h3>No matches found</h3></div>';return;}const heads=players.map(p=>`<th>${esc(p.name)}</th>`).join('');const rows=matches.map(m=>{const res=allData.results[m.id];const done=res&&res.status==='FT';const ar=done?(res.homeScore>res.awayScore?'H':res.homeScore<res.awayScore?'A':'D'):null;const aStr=done?`${res.homeScore}–${res.awayScore}`:res&&res.status==='LIVE'?`${res.homeScore}–${res.awayScore} 🟢`:'–';const cells=players.map(p=>{const pred=(allData.predictions[p.id]||{})[m.id];if(!pred||pred.result==='')return`<td><span class="pred-chip" style="color:var(--text3)">–</span></td>`;const ps=pred.homeScore!==undefined&&pred.homeScore!==''?`${pred.homeScore}–${pred.awayScore}`:pred.result;let cls='';if(done){const cs=String(pred.homeScore)===String(res.homeScore)&&String(pred.awayScore)===String(res.awayScore);const cr=pred.result===ar;cls=cs?'correct':cr?'close':'wrong';}return`<td><span class="pred-chip ${cls}">${ps}</span></td>`;}).join('');return`<tr><td style="color:var(--text2);font-size:11px;white-space:nowrap">${m.stage==='Group Stage'?m.group:m.stage}</td><td style="white-space:nowrap;font-weight:500;font-size:12px">${m.home} v ${m.away}</td><td style="font-weight:700;white-space:nowrap;${res&&res.status==='LIVE'?'color:var(--green)':''}">${aStr}</td>${cells}</tr>`;}).join('');document.getElementById('all-preds-container').innerHTML=`<div style="overflow-x:auto"><table class="pred-table"><thead><tr><th>Stage</th><th>Match</th><th>Result</th>${heads}</tr></thead><tbody>${rows}</tbody></table></div><div style="font-size:11px;color:var(--text3);margin-top:8px"><span style="background:rgba(34,197,94,.15);color:var(--green);padding:2px 6px;border-radius:4px;margin-right:6px">Correct score</span><span style="background:rgba(79,142,247,.1);color:#93bffd;padding:2px 6px;border-radius:4px;margin-right:6px">Correct result</span><span style="background:rgba(239,80,80,.08);color:#f87171;padding:2px 6px;border-radius:4px">Wrong</span></div>`;}
+function renderAllPreds(){if(!allData||!config)return;const search=document.getElementById('pred-search')?.value.toLowerCase()||'';const stageF=document.getElementById('pred-stage-filter')?.value||'';const statusF=document.getElementById('pred-status-filter')?.value||'';let matches=config.matches.filter(m=>{if(search&&!m.home.toLowerCase().includes(search)&&!m.away.toLowerCase().includes(search))return false;if(stageF&&m.stage!==stageF)return false;const r=allData.results[m.id];if(statusF==='done'&&(!r||r.status!=='FT'))return false;if(statusF==='pending'&&r&&r.status==='FT')return false;return true;}).slice(0,80);const players=config.players;if(!matches.length){document.getElementById('all-preds-container').innerHTML='<div class="empty"><h3>No matches found</h3></div>';return;}const heads=players.map(p=>`<th>${esc(p.name)}</th>`).join('');const rows=matches.map(m=>{const res=allData.results[m.id];const done=res&&res.status==='FT';const ar=done?(res.homeScore>res.awayScore?'H':res.homeScore<res.awayScore?'A':'D'):null;const aStr=done?`${res.homeScore}–${res.awayScore}`:res&&res.status==='LIVE'?`${res.homeScore}–${res.awayScore} 🟢`:'–';const cells=players.map(p=>{const pred=(allData.predictions[p.id]||{})[m.id];if(!pred||pred.result==='')return`<td><span class="pred-chip" style="color:var(--text3)">–</span></td>`;const ps=pred.homeScore!==undefined&&pred.homeScore!==''?`${pred.homeScore}–${pred.awayScore}`:pred.result;let cls='';if(done){const cs=String(pred.homeScore)===String(res.homeScore)&&String(pred.awayScore)===String(res.awayScore);const cr=pred.result===ar;cls=cs?'correct':cr?'close':'wrong';}return`<td><span class="pred-chip ${cls}">${ps}</span></td>`;}).join('');return`<tr><td style="color:var(--text2);font-size:11px;white-space:nowrap">${m.stage==='Group Stage'?m.group:m.stage}</td><td style="white-space:nowrap;font-weight:500;font-size:12px">${m.home} v ${m.away}</td><td style="font-weight:700;white-space:nowrap;${res&&res.status==='LIVE'?'color:var(--green)':''}">${aStr}</td>${cells}</tr>`;}).join('');document.getElementById('all-preds-container').innerHTML=`<div style="overflow-x:auto"><table class="pred-table"><thead><tr><th>Stage</th><th>Match</th><th>Result</th>${heads}</tr></thead><tbody>${rows}</tbody></table></div>`;}
 async function verifyAdmin(){const pw=document.getElementById('admin-pw').value;try{await api('/api/admin/apikey','POST',{apiKey:''},pw);adminUnlocked=true;document.getElementById('admin-status').textContent='✓ Unlocked';document.getElementById('admin-status').style.color='var(--green)';document.getElementById('admin-content').style.display='block';renderAdminPage();}catch{document.getElementById('admin-status').textContent='✗ Wrong password';document.getElementById('admin-status').style.color='var(--red)';}}
 function getAdminPw(){return document.getElementById('admin-pw')?.value||'';}
 async function renderAdminPage(){if(!adminUnlocked||!config)return;renderPlayerChips();if(!allData){allData=await api('/api/all-predictions');}renderOutrightAdmin();renderResultsTable();}
-function renderPlayerChips(){document.getElementById('player-count').textContent=config.players.length;document.getElementById('player-chips').innerHTML=config.players.map(p=>`<div class="chip">${esc(p.name)}<button class="chip-del" onclick="removePlayer('${p.id}')">✕</button></div>`).join('');}
-async function addPlayer(){const name=document.getElementById('new-player-inp').value.trim();if(!name)return;try{const r=await api('/api/admin/players','POST',{name},getAdminPw());config.players.push(r.player);document.getElementById('new-player-inp').value='';renderPlayerChips();renderSelectList();showToast(name+' added!','ok');}catch(e){showToast(e.message,'err');}}
+function renderPlayerChips(){document.getElementById('player-count').textContent=config.players.length;document.getElementById('player-chips').innerHTML=config.players.map(p=>`<div class="chip">${esc(p.name)} <span style="font-size:11px;color:var(--text3)">${p.hasPin?'🔒 PIN set':'no PIN'}</span><button class="chip-del" onclick="removePlayer('${p.id}')">✕</button></div>`).join('');}
+async function addPlayer(){const name=document.getElementById('new-player-inp').value.trim();const pin=document.getElementById('new-player-pin').value.trim();if(!name)return;if(pin&&(pin.length<4||pin.length>6||!/^\d+$/.test(pin))){showToast('PIN must be 4-6 digits','err');return;}try{const r=await api('/api/admin/players','POST',{name,pin:pin||null},getAdminPw());config.players.push(r.player);document.getElementById('new-player-inp').value='';document.getElementById('new-player-pin').value='';renderPlayerChips();renderSelectList();showToast(name+' added!'+(pin?' 🔒':''),'ok');}catch(e){showToast(e.message,'err');}}
 async function removePlayer(id){if(!confirm('Remove this player and all their predictions?'))return;await api('/api/admin/players/'+id,'DELETE',null,getAdminPw());config.players=config.players.filter(p=>p.id!==id);renderPlayerChips();renderSelectList();showToast('Removed','ok');}
 function renderOutrightAdmin(){const d=allData?.outright_answers||{};document.getElementById('outright-admin').innerHTML=config.outrights.map(o=>`<div><div style="font-size:12px;color:var(--text2);margin-bottom:4px">${o.label}</div><input class="txt-inp" id="oa-${o.id}" value="${esc(d[o.id]||'')}" placeholder="Enter answer"></div>`).join('');}
-async function saveOutrightAnswers(){const answers={};config.outrights.forEach(o=>{const v=document.getElementById('oa-'+o.id)?.value;if(v!==undefined)answers[o.id]=v.trim();});await api('/api/admin/outrights','POST',{answers},getAdminPw());if(!allData)allData={};allData.outright_answers={...(allData.outright_answers||{}),...answers};showToast('Answers saved!','ok');}
+async function saveOutrightAnswers(){const answers={};config.outrights.forEach(o=>{const v=document.getElementById('oa-'+o.id)?.value;if(v!==undefined)answers[o.id]=v.trim();});await api('/api/admin/outrights','POST',{answers},getAdminPw());if(!allData)allData={};allData.outright_answers={...(allData.outright_answers||{}),...answers};showToast('Answers saved! ✓','ok');}
 async function saveApiKey(){const k=document.getElementById('api-key-inp').value.trim();await api('/api/admin/apikey','POST',{apiKey:k},getAdminPw());showToast('API key saved','ok');}
 async function triggerSync(){showToast('Syncing…','');try{const r=await api('/api/admin/sync','POST',{},getAdminPw());showToast(`Synced! ${r.updated||0} results updated`,'ok');loadLeaderboard();}catch{showToast('Sync requires admin password','err');}}
-function renderResultsTable(){const stage=document.getElementById('res-stage-sel')?.value||'Group Stage';const matches=config.matches.filter(m=>m.stage===stage);const res=allData?.results||{};const rows=matches.map(m=>{const r=res[m.id]||{};return`<tr><td style="color:var(--text2);font-size:12px">${m.home}</td><td><input class="s-inp" id="rhs-${m.id}" value="${r.homeScore??''}" type="number" min="0" max="20" placeholder="0"></td><td style="color:var(--text3)">–</td><td><input class="s-inp" id="ras-${m.id}" value="${r.awayScore??''}" type="number" min="0" max="20" placeholder="0"></td><td style="color:var(--text2);font-size:12px">${m.away}</td><td><select class="ssel" id="rst-${m.id}"><option value="">–</option><option ${r.status==='FT'?'selected':''}>FT</option><option value="LIVE" ${r.status==='LIVE'?'selected':''}>LIVE</option></select></td></tr>`;}).join('');const w=document.getElementById('results-table-wrap');if(w)w.innerHTML=`<table class="res-table"><thead><tr><th>Home</th><th colspan="3">Score</th><th>Away</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table>`;}
-async function saveManualResults(){const stage=document.getElementById('res-stage-sel')?.value||'Group Stage';const matches=config.matches.filter(m=>m.stage===stage);const results={};matches.forEach(m=>{const hs=document.getElementById('rhs-'+m.id)?.value;const as=document.getElementById('ras-'+m.id)?.value;const st=document.getElementById('rst-'+m.id)?.value;if(hs!==''&&as!==''&&st)results[m.id]={homeScore:hs,awayScore:as,status:st};});await api('/api/admin/results','POST',{results},getAdminPw());if(!allData)allData={};allData.results=allData.results||{};for(const[mid,r]of Object.entries(results)){const h=parseInt(r.homeScore),a=parseInt(r.awayScore);allData.results[mid]={homeScore:h,awayScore:a,status:r.status,result:h>a?'H':h<a?'A':'D'};}showToast('Results saved!','ok');loadLeaderboard();}
+function renderResultsTable(){const stage=document.getElementById('res-stage-sel')?.value||'Group Stage';const matches=config.matches.filter(m=>m.stage===stage);const res=allData?.results||{};const rows=matches.map(m=>{const r=res[m.id]||{};return`<tr><td style="color:var(--text2);font-size:12px;white-space:nowrap">${m.home}</td><td><input class="s-inp" id="rhs-${m.id}" value="${r.homeScore??''}" type="number" min="0" max="20" placeholder="0"></td><td style="color:var(--text3)">–</td><td><input class="s-inp" id="ras-${m.id}" value="${r.awayScore??''}" type="number" min="0" max="20" placeholder="0"></td><td style="color:var(--text2);font-size:12px;white-space:nowrap">${m.away}</td><td><select class="ssel" id="rst-${m.id}"><option value="">–</option><option ${r.status==='FT'?'selected':''}>FT</option><option value="LIVE" ${r.status==='LIVE'?'selected':''}>LIVE</option></select></td></tr>`;}).join('');const w=document.getElementById('results-table-wrap');if(w)w.innerHTML=`<table class="res-table"><thead><tr><th>Home</th><th colspan="3">Score</th><th>Away</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table>`;}
+async function saveManualResults(){const stage=document.getElementById('res-stage-sel')?.value||'Group Stage';const matches=config.matches.filter(m=>m.stage===stage);const results={};matches.forEach(m=>{const hs=document.getElementById('rhs-'+m.id)?.value;const as=document.getElementById('ras-'+m.id)?.value;const st=document.getElementById('rst-'+m.id)?.value;if(hs!==''&&as!==''&&st)results[m.id]={homeScore:hs,awayScore:as,status:st};});await api('/api/admin/results','POST',{results},getAdminPw());if(!allData)allData={};allData.results=allData.results||{};for(const[mid,r]of Object.entries(results)){const h=parseInt(r.homeScore),a=parseInt(r.awayScore);allData.results[mid]={homeScore:h,awayScore:a,status:r.status,result:h>a?'H':h<a?'A':'D'};}showToast('Results saved! ✓','ok');loadLeaderboard();}
 async function exportDB(){const d=await api('/api/admin/export','GET',null,getAdminPw());const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(d,null,2)],{type:'application/json'}));a.download='wc2026_backup.json';a.click();}
 async function importDB(){const i=document.createElement('input');i.type='file';i.accept='.json';i.onchange=async e=>{const r=new FileReader();r.onload=async ev=>{try{await api('/api/admin/import','POST',JSON.parse(ev.target.result),getAdminPw());showToast('Imported! Reload page.','ok');}catch{showToast('Import failed','err');}};r.readAsText(e.target.files[0]);};i.click();}
 async function api(path,method='GET',body=null,adminPw=''){const opts={method,headers:{'Content-Type':'application/json'}};if(adminPw)opts.headers['x-admin-password']=adminPw;if(body)opts.body=JSON.stringify(body);const res=await fetch(path,opts);if(!res.ok){const e=await res.json().catch(()=>({error:res.statusText}));throw new Error(e.error||res.statusText);}return res.json();}
+async function apiH(path,extraHeaders={},method='GET',body=null){const opts={method,headers:{'Content-Type':'application/json',...extraHeaders}};if(body)opts.body=JSON.stringify(body);const res=await fetch(path,opts);if(!res.ok){const e=await res.json().catch(()=>({error:res.statusText}));throw new Error(e.error||res.statusText);}return res.json();}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function showToast(msg,type){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show '+type;clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),3000);}
 boot();
-</script></body></html>
+</script>
+</body>
+</html>
