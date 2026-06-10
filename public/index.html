@@ -10,64 +10,27 @@
 body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;font-size:14px;min-height:100vh;position:relative}
 input,select,button{font-family:inherit}
 
-/* ═══════════════════════════════════════════════════
-   GLOBAL BACKGROUND — fixed, behind everything
-═══════════════════════════════════════════════════ */
-#global-bg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;background:linear-gradient(160deg,#020a1e 0%,#071428 35%,#0a1d3e 65%,#030c1a 100%)}
-
-/* colour clouds */
-#global-bg .gc{position:absolute;border-radius:50%;filter:blur(90px);animation:gcPulse 7s ease-in-out infinite}
-#global-bg .gc1{width:600px;height:600px;background:radial-gradient(circle,rgba(37,99,235,.22),transparent 70%);top:-150px;left:-100px;animation-delay:0s}
-#global-bg .gc2{width:500px;height:500px;background:radial-gradient(circle,rgba(240,192,64,.14),transparent 70%);bottom:-120px;right:-80px;animation-delay:-3.5s}
-#global-bg .gc3{width:400px;height:400px;background:radial-gradient(circle,rgba(34,197,94,.1),transparent 70%);top:40%;left:55%;animation-delay:-1.5s}
-#global-bg .gc4{width:350px;height:350px;background:radial-gradient(circle,rgba(168,85,247,.1),transparent 70%);top:20%;right:15%;animation-delay:-5s}
-@keyframes gcPulse{0%,100%{opacity:.7;transform:scale(1)}50%{opacity:1;transform:scale(1.12)}}
-
-/* star field */
-#global-bg .stars{position:absolute;inset:0}
-#global-bg .stars::before,#global-bg .stars::after{content:'';position:absolute;inset:0;background-image:
-  radial-gradient(1.5px 1.5px at 12% 18%,rgba(255,255,255,.55) 0%,transparent 100%),
-  radial-gradient(1px 1px at 28% 72%,rgba(255,255,255,.4) 0%,transparent 100%),
-  radial-gradient(1.5px 1.5px at 45% 35%,rgba(255,255,255,.5) 0%,transparent 100%),
-  radial-gradient(1px 1px at 62% 85%,rgba(255,255,255,.35) 0%,transparent 100%),
-  radial-gradient(1.5px 1.5px at 78% 22%,rgba(255,255,255,.5) 0%,transparent 100%),
-  radial-gradient(1px 1px at 91% 55%,rgba(255,255,255,.4) 0%,transparent 100%),
-  radial-gradient(1px 1px at 6% 91%,rgba(255,255,255,.3) 0%,transparent 100%),
-  radial-gradient(1.5px 1.5px at 54% 10%,rgba(255,255,255,.45) 0%,transparent 100%),
-  radial-gradient(1px 1px at 38% 55%,rgba(255,255,255,.25) 0%,transparent 100%),
-  radial-gradient(1px 1px at 85% 78%,rgba(255,255,255,.3) 0%,transparent 100%)}
-#global-bg .stars::after{background-image:
-  radial-gradient(1px 1px at 19% 42%,rgba(255,255,255,.3) 0%,transparent 100%),
-  radial-gradient(1.5px 1.5px at 33% 8%,rgba(255,255,255,.5) 0%,transparent 100%),
-  radial-gradient(1px 1px at 71% 47%,rgba(255,255,255,.25) 0%,transparent 100%),
-  radial-gradient(1px 1px at 50% 93%,rgba(255,255,255,.3) 0%,transparent 100%),
-  radial-gradient(1.5px 1.5px at 88% 12%,rgba(255,255,255,.45) 0%,transparent 100%);
-  opacity:.6}
-
-/* big footballs */
-#global-bg .ball{position:absolute;font-size:200px;opacity:.055;animation:ballFloat 10s ease-in-out infinite;user-select:none;line-height:1}
-#global-bg .ball.b1{top:-60px;left:-50px;animation-delay:0s;font-size:220px}
-#global-bg .ball.b2{bottom:-80px;right:-60px;animation-delay:-5s;font-size:260px}
-#global-bg .ball.b3{top:38%;right:3%;font-size:110px;animation-delay:-2.5s;opacity:.035}
-@keyframes ballFloat{0%,100%{transform:translateY(0) rotate(0deg)}33%{transform:translateY(-22px) rotate(12deg)}66%{transform:translateY(-8px) rotate(-8deg)}}
-
-/* trophy */
-#global-bg .trophy{position:absolute;top:6%;right:7%;font-size:130px;opacity:.055;animation:ballFloat 12s ease-in-out infinite;animation-delay:-7s}
-
-/* player silhouettes */
-#global-bg .sil{position:absolute;bottom:0;opacity:.07}
-#global-bg .sil svg{height:440px;width:auto;display:block}
-#global-bg .sil-l{left:1%}
-#global-bg .sil-r{right:1%;transform:scaleX(-1)}
-
-/* diagonal light beam */
-#global-bg .beam{position:absolute;top:0;left:30%;width:2px;height:100%;background:linear-gradient(180deg,transparent,rgba(240,192,64,.06) 30%,rgba(59,130,246,.08) 60%,transparent);transform:rotate(15deg);transform-origin:top left}
-
-/* bottom flag strip */
-#global-bg .flag-strip{position:absolute;bottom:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#e74c3c 0%,#e67e22 10%,#f1c40f 20%,#2ecc71 30%,#3498db 40%,#9b59b6 50%,#e74c3c 60%,#e67e22 70%,#f1c40f 80%,#2ecc71 90%,#3498db 100%);opacity:.5}
-
-/* hexagon pattern overlay */
-#global-bg .hex-overlay{position:absolute;inset:0;opacity:.015;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='100'%3E%3Cpath d='M28 0 L56 14 L56 42 L28 56 L0 42 L0 14Z' fill='none' stroke='white' stroke-width='1'/%3E%3Cpath d='M28 56 L56 70 L56 98 L28 112 L0 98 L0 70Z' fill='none' stroke='white' stroke-width='1'/%3E%3C/svg%3E")}
+/* ═══ GLOBAL BACKGROUND ═══ */
+.wc-bg{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;overflow:hidden;background:#020a1e}
+.wc-bg-gradient{position:absolute;top:0;left:0;width:100%;height:100%;background:linear-gradient(160deg,#020a1e 0%,#071830 35%,#0c2040 65%,#030d1c 100%)}
+.wc-glow{position:absolute;border-radius:50%;filter:blur(80px);animation:wcGlow 7s ease-in-out infinite}
+.wc-g1{width:700px;height:700px;background:rgba(37,99,235,.25);top:-200px;left:-150px;animation-delay:0s}
+.wc-g2{width:600px;height:600px;background:rgba(240,192,64,.16);bottom:-150px;right:-100px;animation-delay:-3.5s}
+.wc-g3{width:450px;height:450px;background:rgba(34,197,94,.12);top:35%;left:50%;animation-delay:-1.8s}
+.wc-g4{width:380px;height:380px;background:rgba(168,85,247,.12);top:15%;right:10%;animation-delay:-5.2s}
+@keyframes wcGlow{0%,100%{opacity:.65;transform:scale(1)}50%{opacity:1;transform:scale(1.15)}}
+.wc-stars{position:absolute;top:0;left:0;width:100%;height:100%;background-image:radial-gradient(1.5px 1.5px at 8% 15%,rgba(255,255,255,.6),transparent),radial-gradient(1px 1px at 22% 68%,rgba(255,255,255,.45),transparent),radial-gradient(1.5px 1.5px at 38% 32%,rgba(255,255,255,.55),transparent),radial-gradient(1px 1px at 55% 80%,rgba(255,255,255,.4),transparent),radial-gradient(1.5px 1.5px at 72% 20%,rgba(255,255,255,.55),transparent),radial-gradient(1px 1px at 88% 50%,rgba(255,255,255,.45),transparent),radial-gradient(1px 1px at 14% 88%,rgba(255,255,255,.35),transparent),radial-gradient(1.5px 1.5px at 48% 8%,rgba(255,255,255,.5),transparent),radial-gradient(1px 1px at 65% 55%,rgba(255,255,255,.3),transparent),radial-gradient(1px 1px at 92% 75%,rgba(255,255,255,.4),transparent),radial-gradient(1px 1px at 32% 45%,rgba(255,255,255,.3),transparent),radial-gradient(1.5px 1.5px at 78% 88%,rgba(255,255,255,.45),transparent),radial-gradient(1px 1px at 5% 55%,rgba(255,255,255,.35),transparent),radial-gradient(1px 1px at 58% 25%,rgba(255,255,255,.3),transparent),radial-gradient(1.5px 1.5px at 95% 12%,rgba(255,255,255,.5),transparent)}
+.wc-ball{position:absolute;font-size:200px;opacity:.06;animation:wcFloat 10s ease-in-out infinite;user-select:none;line-height:1}
+.wc-ball.wb1{top:-50px;left:-40px;font-size:220px;animation-delay:0s}
+.wc-ball.wb2{bottom:-70px;right:-50px;font-size:260px;animation-delay:-5s}
+.wc-ball.wb3{top:40%;right:4%;font-size:105px;animation-delay:-2.5s;opacity:.04}
+@keyframes wcFloat{0%,100%{transform:translateY(0) rotate(0deg)}33%{transform:translateY(-24px) rotate(13deg)}66%{transform:translateY(-9px) rotate(-9deg)}}
+.wc-trophy{position:absolute;top:5%;right:6%;font-size:130px;opacity:.06;animation:wcFloat 12s ease-in-out infinite;animation-delay:-7s}
+.wc-beam{position:absolute;top:0;left:28%;width:3px;height:130%;background:linear-gradient(180deg,transparent 0%,rgba(240,192,64,.07) 25%,rgba(59,130,246,.09) 55%,transparent 100%);transform:rotate(14deg);transform-origin:top left}
+.wc-sil{position:absolute;bottom:0;opacity:.08}
+.wc-sil-l{left:0}
+.wc-sil-r{right:0;transform:scaleX(-1)}
+.wc-strip{position:absolute;bottom:0;left:0;width:100%;height:5px;background:linear-gradient(90deg,#e74c3c,#e67e22,#f1c40f,#2ecc71,#3498db,#9b59b6,#e74c3c,#e67e22,#f1c40f,#2ecc71,#3498db);opacity:.55}
 
 /* ═══════════════════════════════════════════════════
    NAV
@@ -217,42 +180,40 @@ input,select,button{font-family:inherit}
 <body>
 
 <!-- ═══ GLOBAL BACKGROUND — always visible ═══ -->
-<div id="global-bg">
-  <div class="gc gc1"></div>
-  <div class="gc gc2"></div>
-  <div class="gc gc3"></div>
-  <div class="gc gc4"></div>
-  <div class="stars"></div>
-  <div class="hex-overlay"></div>
-  <div class="beam"></div>
-  <div class="ball b1">⚽</div>
-  <div class="ball b2">⚽</div>
-  <div class="ball b3">⚽</div>
-  <div class="trophy">🏆</div>
-  <!-- Messi-style silhouette (kicking) -->
-  <div class="sil sil-l">
-    <svg viewBox="0 0 130 460" xmlns="http://www.w3.org/2000/svg" fill="white">
-      <ellipse cx="65" cy="34" rx="24" ry="26"/>
-      <path d="M41 60 Q32 88 30 122 Q28 154 35 174 L46 168 Q41 142 44 120 L65 126 L86 120 Q89 142 84 168 L95 174 Q102 154 100 122 Q98 88 89 60 Z"/>
-      <path d="M41 76 Q20 64 9 48 Q4 40 11 35 Q18 30 23 40 Q32 56 46 68 Z"/>
-      <path d="M89 76 Q108 68 118 78 Q125 86 120 93 Q115 100 109 93 Q100 82 86 78 Z"/>
-      <path d="M46 168 Q39 206 36 238 Q33 260 40 276 Q44 285 52 280 Q60 275 57 262 Q52 242 56 218 L60 182 Z"/>
-      <path d="M84 168 Q91 196 94 218 Q100 238 114 246 Q123 249 125 241 Q127 233 118 229 Q107 222 103 207 Q96 186 88 172 Z"/>
-      <circle cx="120" cy="256" r="14"/>
+<div class="wc-bg">
+  <div class="wc-bg-gradient"></div>
+  <div class="wc-glow wc-g1"></div>
+  <div class="wc-glow wc-g2"></div>
+  <div class="wc-glow wc-g3"></div>
+  <div class="wc-glow wc-g4"></div>
+  <div class="wc-stars"></div>
+  <div class="wc-beam"></div>
+  <div class="wc-ball wb1">⚽</div>
+  <div class="wc-ball wb2">⚽</div>
+  <div class="wc-ball wb3">⚽</div>
+  <div class="wc-trophy">🏆</div>
+  <div class="wc-sil wc-sil-l">
+    <svg width="160" height="480" viewBox="0 0 160 480" xmlns="http://www.w3.org/2000/svg" fill="white">
+      <ellipse cx="80" cy="38" rx="28" ry="30"/>
+      <path d="M52 68 Q42 100 40 138 Q38 172 46 194 L58 188 Q53 160 56 136 L80 143 L104 136 Q107 160 102 188 L114 194 Q122 172 120 138 Q118 100 108 68 Z"/>
+      <path d="M52 86 Q28 72 14 54 Q8 44 16 38 Q24 32 30 44 Q40 62 58 76 Z"/>
+      <path d="M108 86 Q130 76 142 88 Q150 98 144 106 Q138 114 132 106 Q122 94 106 90 Z"/>
+      <path d="M58 188 Q50 230 46 266 Q42 292 50 310 Q55 321 65 315 Q75 309 72 295 Q66 272 70 246 L74 206 Z"/>
+      <path d="M102 188 Q110 222 114 252 Q122 275 138 284 Q149 288 151 278 Q153 268 143 263 Q130 255 126 238 Q118 212 108 196 Z"/>
+      <circle cx="148" cy="292" r="16"/>
     </svg>
   </div>
-  <!-- Ronaldo-style silhouette (celebration arms up) -->
-  <div class="sil sil-r">
-    <svg viewBox="0 0 130 460" xmlns="http://www.w3.org/2000/svg" fill="white">
-      <ellipse cx="65" cy="32" rx="22" ry="24"/>
-      <path d="M43 56 Q34 84 32 118 Q30 150 37 170 L48 164 Q43 138 46 116 L65 122 L84 116 Q87 138 82 164 L93 170 Q100 150 98 118 Q96 84 87 56 Z"/>
-      <path d="M43 72 Q22 44 8 32 Q2 24 8 18 Q15 12 21 22 Q34 44 48 66 Z"/>
-      <path d="M87 72 Q108 44 122 32 Q128 24 122 18 Q115 12 109 22 Q96 44 82 66 Z"/>
-      <path d="M48 164 Q43 200 40 232 Q38 254 45 268 Q50 278 58 273 Q66 268 63 255 Q58 234 62 210 L64 176 Z"/>
-      <path d="M82 164 Q87 200 90 232 Q92 254 85 268 Q80 278 72 273 Q64 268 67 255 Q72 234 68 210 L66 176 Z"/>
+  <div class="wc-sil wc-sil-r">
+    <svg width="160" height="480" viewBox="0 0 160 480" xmlns="http://www.w3.org/2000/svg" fill="white">
+      <ellipse cx="80" cy="36" rx="26" ry="28"/>
+      <path d="M54 64 Q44 94 42 130 Q40 164 48 186 L60 180 Q55 154 58 130 L80 136 L102 130 Q105 154 100 180 L112 186 Q120 164 118 130 Q116 94 106 64 Z"/>
+      <path d="M54 82 Q30 52 14 38 Q6 28 14 20 Q22 12 28 24 Q42 50 60 76 Z"/>
+      <path d="M106 82 Q130 52 146 38 Q154 28 146 20 Q138 12 132 24 Q118 50 100 76 Z"/>
+      <path d="M60 180 Q54 218 50 252 Q48 276 56 292 Q62 304 72 298 Q82 292 78 278 Q72 254 76 228 L78 196 Z"/>
+      <path d="M100 180 Q106 218 110 252 Q112 276 104 292 Q98 304 88 298 Q78 292 82 278 Q88 254 84 228 L82 196 Z"/>
     </svg>
   </div>
-  <div class="flag-strip"></div>
+  <div class="wc-strip"></div>
 </div>
 
 <!-- ═══ SELECT SCREEN ═══ -->
