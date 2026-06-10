@@ -58,7 +58,7 @@
     </div>
   </div>
 </div>
-
+ 
 <div id="main-app" style="display:none">
   <div class="nav">
     <div class="nav-logo">⚽ WC<span>2026</span></div>
@@ -71,7 +71,7 @@
     </div>
     <div class="nav-player" id="nav-player-name" style="display:none"></div>
   </div>
-
+ 
   <div id="page-leaderboard" class="page active">
     <div class="page-header">
       <div><div class="page-title">Leaderboard</div><div class="page-sub" id="lb-sub">—</div></div>
@@ -82,7 +82,7 @@
     <table class="lb-table"><thead><tr><th>#</th><th>Player</th><th style="text-align:right">Pts</th><th>Results</th><th>Scores</th><th>Outrights</th></tr></thead><tbody id="lb-body"></tbody></table>
     <div class="last-sync" id="last-sync-label"></div>
   </div>
-
+ 
   <div id="page-predict" class="page">
     <div class="page-header">
       <div><div class="page-title" id="predict-title">My Predictions</div><div class="page-sub">1 pt per correct result · 1 pt per correct score</div></div>
@@ -91,13 +91,13 @@
     <div id="matches-container"></div>
     <div class="save-bar"><div class="save-bar-info"><strong id="save-count">0</strong> predictions this stage</div><button class="btn-save" id="save-btn" onclick="savePredictions()">Save predictions</button></div>
   </div>
-
+ 
   <div id="page-outrights" class="page">
     <div class="page-header"><div><div class="page-title">Outright Predictions</div><div class="page-sub">10 pts each · locks when tournament kicks off</div></div></div>
     <div class="outright-grid" id="outright-pred-grid"></div>
     <div class="save-bar"><div class="save-bar-info">10 outrights · 10 pts each</div><button class="btn-save" onclick="saveOutrights()">Save outrights</button></div>
   </div>
-
+ 
   <div id="page-all-preds" class="page">
     <div class="page-header"><div><div class="page-title">All Predictions</div><div class="page-sub">Everyone's picks vs actual results</div></div></div>
     <div class="pred-filter-row">
@@ -107,7 +107,7 @@
     </div>
     <div id="all-preds-container"></div>
   </div>
-
+ 
   <div id="page-admin" class="page">
     <div class="page-header"><div><div class="page-title">Admin</div></div></div>
     <div class="admin-block">
@@ -153,7 +153,7 @@
     </div>
   </div>
 </div>
-
+ 
 <div class="toast" id="toast"></div>
 <script>
 let config=null,allData=null,locks={},currentPlayer=null,myPreds={},myOutrightPreds={},adminUnlocked=false,currentStage='Group Stage';
