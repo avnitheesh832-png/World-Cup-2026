@@ -151,6 +151,7 @@ app.get('/api/config', (req, res) => {
     players: db.players.map(p => ({ id: p.id, name: p.name, hasPin: !!p.pin })),
     lockMinutes: 5,
     now: new Date().toISOString(),
+    outrightsLocked: Date.now() >= new Date('2026-06-15T23:59:00Z').getTime(),
   });
 });
 
@@ -207,12 +208,15 @@ app.post('/api/predictions/:playerId', (req, res) => {
   }
 
   if (outright_preds) {
-    const tournamentStarted = isMatchLocked(MATCHES[0].id);
-    if (!tournamentStarted) {
+    const OUTRIGHT_LOCK = new Date('2026-06-15T23:59:00Z');
+    const outrightsLocked = Date.now() >= OUTRIGHT_LOCK.getTime();
+    if (!outrightsLocked) {
       if (!db.outright_preds[req.params.playerId]) db.outright_preds[req.params.playerId] = {};
       for (const [oid, val] of Object.entries(outright_preds)) {
         db.outright_preds[req.params.playerId][oid] = val;
       }
+    } else {
+      return res.json({ saved, locked, outrightsLocked: true, message: 'Outrights locked — deadline was Jun 15' });
     }
   }
 
