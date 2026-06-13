@@ -52,7 +52,8 @@ function adminAuth(req, res, next) {
 function isMatchLocked(matchId) {
   const match = MATCHES.find(m => m.id == matchId);
   if (!match || !match.kickoff) return false;
-  return Date.now() >= new Date(match.kickoff).getTime() - 5 * 60 * 1000;
+  // Lock exactly at kickoff time (no early lock)
+  return Date.now() >= new Date(match.kickoff).getTime();
 }
 
 function getMatchResult(hs, as) {
