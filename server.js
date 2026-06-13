@@ -151,7 +151,7 @@ app.get('/api/config', (req, res) => {
     players: db.players.map(p => ({ id: p.id, name: p.name, hasPin: !!p.pin })),
     lockMinutes: 5,
     now: new Date().toISOString(),
-    outrightsLocked: Date.now() >= new Date('2026-06-15T23:59:00Z').getTime(),
+    outrightsLocked: Date.now() >= new Date('2026-06-20T23:59:00Z').getTime(),
   });
 });
 
@@ -208,7 +208,7 @@ app.post('/api/predictions/:playerId', (req, res) => {
   }
 
   if (outright_preds) {
-    const OUTRIGHT_LOCK = new Date('2026-06-15T23:59:00Z');
+    const OUTRIGHT_LOCK = new Date('2026-06-20T23:59:00Z');
     const outrightsLocked = Date.now() >= OUTRIGHT_LOCK.getTime();
     if (!outrightsLocked) {
       if (!db.outright_preds[req.params.playerId]) db.outright_preds[req.params.playerId] = {};
@@ -314,6 +314,30 @@ app.post('/api/admin/apikey', adminAuth, (req, res) => {
   db.apiKey = req.body.apiKey || '';
   saveDB(db);
   res.json({ ok: true });
+});
+
+// Admin override — edit any player's predictions, bypasses PIN and match lock
+app.post('/api/admin/predictions/:playerId', adminAuth, (req, res) => {
+  const db = loadDB();
+  const player = db.players.find(p => p.id === req.params.playerId);
+  if (!player) return res.status(404).json({ error: 'Player not found' });
+  const { predictions, outright_preds } = req.body;
+  if (predictions) {
+    if (!db.predictions[req.params.playerId]) db.predictions[req.params.playerId] = {};
+    for (const [mid, pred] of Object.entries(predictions)) {
+      db.predictions[req.params.playerId][mid] = {
+        homeScore: pred.homeScore,
+        awayScore: pred.awayScore,
+        result: pred.result,
+      };
+    }
+  }
+  if (outright_preds) {
+    if (!db.outright_preds[req.params.playerId]) db.outright_preds[req.params.playerId] = {};
+    Object.assign(db.outright_preds[req.params.playerId], outright_preds);
+  }
+  saveDB(db);
+  res.json({ ok: true, saved: Object.keys(predictions||{}).length });
 });
 
 app.get('/api/admin/export', adminAuth, (req, res) => {
