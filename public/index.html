@@ -372,15 +372,38 @@ input,select,button{font-family:inherit}
       </div>
       <div class="admin-block">
         <div class="admin-block-title">Manual result entry</div>
-        <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+        <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
           <select class="fsel" id="res-stage-sel" onchange="renderResultsTable()">
             <option>Group Stage</option><option>Round of 32</option><option>Round of 16</option>
             <option>Quarter-finals</option><option>Semi-finals</option><option>Final</option>
           </select>
+          <select class="fsel" id="res-filter" onchange="renderResultsTable()">
+            <option value="all">All matches</option>
+            <option value="done">Entered ✓</option>
+            <option value="pending">Not entered yet</option>
+          </select>
+          <input class="txt-inp" id="res-search" placeholder="Search team..." oninput="renderResultsTable()" style="max-width:180px;flex:none">
           <button class="btn btn-primary" onclick="saveManualResults()">Save results</button>
         </div>
         <div id="results-table-wrap" style="overflow-x:auto"></div>
       </div>
+      <div class="admin-block">
+        <div class="admin-block-title">Edit a player's prediction <span class="badge-sm">enter on their behalf</span></div>
+        <div class="info-box">Use this to enter or correct a prediction for any player — e.g. someone WhatsApped you their picks. This bypasses PIN and match locks.</div>
+        <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
+          <select class="fsel" id="ap-player-sel" onchange="renderAdminPredRow()">
+            <option value="">— Select player —</option>
+          </select>
+          <input class="txt-inp" id="ap-match-search" placeholder="Search match (e.g. Mexico)" oninput="renderAdminPredRow()" style="max-width:200px;flex:none">
+          <select class="fsel" id="ap-stage-sel" onchange="renderAdminPredRow()">
+            <option>Group Stage</option><option>Round of 32</option><option>Round of 16</option>
+            <option>Quarter-finals</option><option>Semi-finals</option><option>Final</option>
+          </select>
+        </div>
+        <div id="admin-pred-editor"></div>
+        <button class="btn btn-primary" style="margin-top:12px" onclick="saveAdminPred()">Save player prediction</button>
+      </div>
+
       <div class="admin-block">
         <div class="admin-block-title" style="color:var(--red)">Danger</div>
         <div class="input-row">
@@ -398,7 +421,7 @@ input,select,button{font-family:inherit}
 let config=null,allData=null,locks={},currentPlayer=null,currentPin=null,myPreds={},myOutrightPreds={},adminUnlocked=false,currentStage='Group Stage';
 let pinBuffer='',pinTarget=null;
 const STAGES=['Group Stage','Round of 32','Round of 16','Quarter-finals','Semi-finals','Final'];
-const OUTRIGHT_LOCK_DATE = new Date('2026-06-15T23:59:00Z');
+const OUTRIGHT_LOCK_DATE = new Date('2026-06-20T23:59:00Z');
 function outrightsAreLocked(){ return Date.now() >= OUTRIGHT_LOCK_DATE.getTime(); }
 
 async function boot(){
@@ -564,12 +587,12 @@ function renderMatchCards(){
     if(res) filled++;
     const d=locked?'disabled':'';
     const ko=m.kickoff?new Date(m.kickoff):null;
-    const dateStr=ko?ko.toLocaleDateString(undefined,{weekday:'long',day:'numeric',month:'long'}):'';
-    const timeStr=ko?ko.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'}):'';
+    const dateStr=ko?ko.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',timeZone:'Asia/Dubai'}):'';
+    const timeStr=ko?ko.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Dubai'}):'';
     if(dateStr!==lastDate){ html+=`<div class="date-header">${dateStr}</div>`; lastDate=dateStr; }
     const grpBadge=m.group?`<span style="background:rgba(240,192,64,.12);color:var(--gold);padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700">${m.group}</span>`:'';
     html+=`<div class="match-card ${locked?'locked':''}">
-      <div class="match-card-head"><span>${timeStr} ${grpBadge}</span><span style="color:${locked?'var(--red)':'var(--text3)'}">${locked?'🔒 Locked':''}</span></div>
+      <div class="match-card-head"><span>${timeStr} <span style="color:var(--text3);font-size:10px">GST</span> ${grpBadge}</span><span style="color:${locked?'var(--red)':'var(--text3)'}">${locked?'🔒 Locked':''}</span></div>
       <div class="match-card-body">
         <div class="team-name"><span class="tm-flag">${flag(m.home)}</span> ${m.home}</div>
         <div class="score-entry">
@@ -690,7 +713,7 @@ function renderAllPreds(){
       if(done){const cs=String(pred.homeScore)===String(res.homeScore)&&String(pred.awayScore)===String(res.awayScore);cls=cs?'correct':pred.result===ar?'close':'wrong';}
       return`<td><span class="pred-chip ${cls}">${ps}</span></td>`;
     }).join('');
-    const ko=m.kickoff?new Date(m.kickoff).toLocaleDateString(undefined,{day:'numeric',month:'short'}):'';
+    const ko=m.kickoff?new Date(m.kickoff).toLocaleDateString('en-GB',{day:'numeric',month:'short',timeZone:'Asia/Dubai'}):'';
     return`<tr><td style="color:var(--text2);font-size:11px;white-space:nowrap">${ko}</td><td style="white-space:nowrap;font-weight:500;font-size:12px">${flag(m.home)} ${m.home} v ${m.away} ${flag(m.away)}</td><td style="font-weight:700;white-space:nowrap;${res&&res.status==='LIVE'?'color:var(--green)':''}">${aStr}</td>${cells}</tr>`;
   }).join('');
   document.getElementById('all-preds-container').innerHTML=`<div style="overflow-x:auto"><table class="pred-table"><thead><tr><th>Date</th><th>Match</th><th>Result</th>${heads}</tr></thead><tbody>${rows}</tbody></table></div>`;
@@ -714,8 +737,9 @@ function getAdminPw(){ return document.getElementById('admin-pw')?.value||''; }
 async function renderAdminPage(){
   if(!adminUnlocked||!config) return;
   renderPlayerChips();
-  if(!allData) allData=await api('/api/all-predictions');
-  renderOutrightAdmin(); renderResultsTable();
+  // Always refresh so results table shows latest saved scores
+  allData = await api('/api/all-predictions');
+  renderOutrightAdmin(); renderResultsTable(); renderAdminPredRow();
 }
 function renderPlayerChips(){
   document.getElementById('player-count').textContent=config.players.length;
@@ -764,15 +788,45 @@ async function triggerSync(){
 }
 function renderResultsTable(){
   const stage=document.getElementById('res-stage-sel')?.value||'Group Stage';
-  const matches=config.matches.filter(m=>m.stage===stage).sort((a,b)=>new Date(a.kickoff)-new Date(b.kickoff));
+  const search=(document.getElementById('res-search')?.value||'').toLowerCase();
+  const filterEl=document.getElementById('res-filter')?.value||'all';
+  const matches=config.matches.filter(m=>{
+    if(m.stage!==stage) return false;
+    if(search&&!m.home.toLowerCase().includes(search)&&!m.away.toLowerCase().includes(search)) return false;
+    const r=(allData?.results||{})[m.id];
+    if(filterEl==='done'&&(!r||r.status!=='FT')) return false;
+    if(filterEl==='pending'&&r&&r.status==='FT') return false;
+    return true;
+  }).sort((a,b)=>new Date(a.kickoff)-new Date(b.kickoff));
   const res=allData?.results||{};
   const rows=matches.map(m=>{
     const r=res[m.id]||{};
-    const ko=m.kickoff?new Date(m.kickoff).toLocaleDateString(undefined,{day:'numeric',month:'short'}):'';
-    return`<tr><td style="color:var(--text2);font-size:11px">${ko}</td><td style="font-size:12px">${flag(m.home)} ${m.home}</td><td><input class="s-inp" id="rhs-${m.id}" value="${r.homeScore??''}" type="number" min="0" max="20" placeholder="0"></td><td style="color:var(--text3)">–</td><td><input class="s-inp" id="ras-${m.id}" value="${r.awayScore??''}" type="number" min="0" max="20" placeholder="0"></td><td style="font-size:12px">${flag(m.away)} ${m.away}</td><td><select class="ssel" id="rst-${m.id}"><option value="">–</option><option ${r.status==='FT'?'selected':''}>FT</option><option value="LIVE" ${r.status==='LIVE'?'selected':''}>LIVE</option></select></td></tr>`;
+    const hasResult=r.status==='FT'||r.status==='LIVE';
+    const ko=m.kickoff?new Date(m.kickoff).toLocaleDateString('en-GB',{day:'numeric',month:'short',timeZone:'Asia/Dubai'}):'';
+    const rowBg=hasResult?'background:rgba(34,197,94,.05)':'';
+    const scoreDisplay=hasResult?`<span style="font-size:11px;font-weight:700;color:var(--green)">${r.homeScore}–${r.awayScore}</span>`:'';
+    return`<tr style="${rowBg}">
+      <td style="color:var(--text2);font-size:11px;white-space:nowrap">${ko}</td>
+      <td style="font-size:12px;white-space:nowrap">${flag(m.home)} ${m.home}</td>
+      <td><input class="s-inp" id="rhs-${m.id}" value="${r.homeScore??''}" type="number" min="0" max="20" placeholder="0" style="${hasResult?'border-color:rgba(34,197,94,.4)':''}"></td>
+      <td style="color:var(--text3);text-align:center">–</td>
+      <td><input class="s-inp" id="ras-${m.id}" value="${r.awayScore??''}" type="number" min="0" max="20" placeholder="0" style="${hasResult?'border-color:rgba(34,197,94,.4)':''}"></td>
+      <td style="font-size:12px;white-space:nowrap">${flag(m.away)} ${m.away}</td>
+      <td><select class="ssel" id="rst-${m.id}"><option value="">–</option><option ${r.status==='FT'?'selected':''} value="FT">FT</option><option value="LIVE" ${r.status==='LIVE'?'selected':''}>LIVE</option></select></td>
+      <td>${scoreDisplay}</td>
+    </tr>`;
   }).join('');
   const w=document.getElementById('results-table-wrap');
-  if(w) w.innerHTML=`<table class="res-table"><thead><tr><th>Date</th><th>Home</th><th colspan="3">Score</th><th>Away</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table>`;
+  const count=Object.values(res).filter(r=>r.status==='FT').length;
+  if(w) w.innerHTML=`
+    <div style="font-size:12px;color:var(--text2);margin-bottom:8px">
+      <span style="color:var(--green);font-weight:600">${count} results entered</span> · 
+      <span>Green rows = already saved · just edit and re-save to correct any score</span>
+    </div>
+    <table class="res-table">
+      <thead><tr><th>Date</th><th>Home</th><th colspan="3">Score</th><th>Away</th><th>Status</th><th>Saved</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
 }
 async function saveManualResults(){
   const stage=document.getElementById('res-stage-sel')?.value||'Group Stage';
@@ -841,6 +895,111 @@ const FLAGS = {
   'England':'🏴󠁧󠁢󠁥󠁮󠁧󠁿','Croatia':'🇭🇷','Ghana':'🇬🇭','Panama':'🇵🇦',
 };
 function flag(name){ return FLAGS[name]||''; }
+
+
+function renderAdminPredRow(){
+  // Populate player selector
+  const sel = document.getElementById('ap-player-sel');
+  if(sel && config){
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">— Select player —</option>' +
+      config.players.map(p=>`<option value="${p.id}" ${p.id===cur?'selected':''}>${esc(p.name)}</option>`).join('');
+    if(cur) sel.value = cur;
+  }
+
+  const playerId = document.getElementById('ap-player-sel')?.value;
+  const search = (document.getElementById('ap-match-search')?.value||'').toLowerCase();
+  const stage = document.getElementById('ap-stage-sel')?.value||'Group Stage';
+  const wrap = document.getElementById('admin-pred-editor');
+  if(!wrap) return;
+  if(!playerId){ wrap.innerHTML='<div style="color:var(--text3);font-size:13px">Select a player above.</div>'; return; }
+
+  const playerPreds = (allData?.predictions||{})[playerId] || {};
+  const matches = config.matches.filter(m=>{
+    if(m.stage!==stage) return false;
+    if(search && !m.home.toLowerCase().includes(search) && !m.away.toLowerCase().includes(search)) return false;
+    return true;
+  }).sort((a,b)=>new Date(a.kickoff)-new Date(b.kickoff)).slice(0,30);
+
+  if(!matches.length){ wrap.innerHTML='<div style="color:var(--text3);font-size:13px">No matches found.</div>'; return; }
+
+  const rows = matches.map(m=>{
+    const pred = playerPreds[m.id] || {};
+    const hs = pred.homeScore!==undefined ? pred.homeScore : '';
+    const as = pred.awayScore!==undefined ? pred.awayScore : '';
+    const res = pred.result||'';
+    const hasPred = res !== '';
+    const ko = m.kickoff ? new Date(m.kickoff).toLocaleDateString('en-GB',{day:'numeric',month:'short',timeZone:'Asia/Dubai'}) : '';
+    return `<tr style="${hasPred?'background:rgba(34,197,94,.05)':''}">
+      <td style="font-size:11px;color:var(--text2);white-space:nowrap">${ko}</td>
+      <td style="font-size:12px;white-space:nowrap">${flag(m.home)} ${m.home}</td>
+      <td><input class="s-inp" id="aph-${m.id}" value="${hs}" type="number" min="0" max="20" placeholder="0" oninput="apAutoRes(${m.id})"></td>
+      <td style="color:var(--text3);text-align:center">–</td>
+      <td><input class="s-inp" id="apa-${m.id}" value="${as}" type="number" min="0" max="20" placeholder="0" oninput="apAutoRes(${m.id})"></td>
+      <td style="font-size:12px;white-space:nowrap">${flag(m.away)} ${m.away}</td>
+      <td>
+        <select class="ssel" id="apr-${m.id}">
+          <option value="" ${!res?'selected':''}>–</option>
+          <option value="H" ${res==='H'?'selected':''}>H Win</option>
+          <option value="D" ${res==='D'?'selected':''}>Draw</option>
+          <option value="A" ${res==='A'?'selected':''}>A Win</option>
+        </select>
+      </td>
+      <td style="font-size:11px;color:${hasPred?'var(--green)':'var(--text3)'}">${hasPred?'✓ entered':'–'}</td>
+    </tr>`;
+  }).join('');
+
+  wrap.innerHTML = `<div style="overflow-x:auto"><table class="res-table">
+    <thead><tr><th>Date</th><th>Home</th><th colspan="3">Score pred</th><th>Away</th><th>Result</th><th>Status</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table></div>`;
+}
+
+function apAutoRes(mid){
+  const h = parseInt(document.getElementById('aph-'+mid)?.value);
+  const a = parseInt(document.getElementById('apa-'+mid)?.value);
+  const sel = document.getElementById('apr-'+mid);
+  if(!isNaN(h) && !isNaN(a) && sel) sel.value = h>a?'H':h<a?'A':'D';
+}
+
+async function saveAdminPred(){
+  const playerId = document.getElementById('ap-player-sel')?.value;
+  if(!playerId){ showToast('Select a player first','err'); return; }
+  const stage = document.getElementById('ap-stage-sel')?.value||'Group Stage';
+  const search = (document.getElementById('ap-match-search')?.value||'').toLowerCase();
+  const matches = config.matches.filter(m=>{
+    if(m.stage!==stage) return false;
+    if(search && !m.home.toLowerCase().includes(search) && !m.away.toLowerCase().includes(search)) return false;
+    return true;
+  }).slice(0,30);
+
+  const predictions = {};
+  matches.forEach(m=>{
+    const hs = document.getElementById('aph-'+m.id)?.value;
+    const as = document.getElementById('apa-'+m.id)?.value;
+    const res = document.getElementById('apr-'+m.id)?.value;
+    if(res && res!==''){
+      predictions[m.id] = {
+        homeScore: hs!==''?parseInt(hs):'',
+        awayScore: as!==''?parseInt(as):'',
+        result: res
+      };
+    }
+  });
+
+  if(!Object.keys(predictions).length){ showToast('No predictions to save','err'); return; }
+
+  try{
+    // Use admin override endpoint — bypasses PIN and lock
+    await api('/api/admin/predictions/'+playerId,'POST',{predictions},getAdminPw());
+    // Update local allData
+    if(!allData) allData={predictions:{},outright_preds:{},results:{},outright_answers:{}};
+    if(!allData.predictions[playerId]) allData.predictions[playerId]={};
+    Object.assign(allData.predictions[playerId], predictions);
+    showToast(`Saved ${Object.keys(predictions).length} predictions for ${config.players.find(p=>p.id===playerId)?.name}!`,'ok');
+    renderAdminPredRow();
+  } catch(e){ showToast('Error: '+e.message,'err'); }
+}
 
 boot();
 </script>
