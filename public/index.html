@@ -174,7 +174,11 @@ input,select,button{font-family:inherit}
 .toast.show{opacity:1}.toast.ok{border-color:var(--green);color:var(--green)}.toast.err{border-color:var(--red);color:var(--red)}
 .loading{display:flex;align-items:center;justify-content:center;min-height:200px;color:var(--text3);font-size:14px;gap:10px}
 .spinner{width:16px;height:16px;border:2px solid var(--border2);border-top-color:var(--gold);border-radius:50%;animation:spin .6s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
-@media(max-width:600px){.stats-row{grid-template-columns:1fr 1fr}.podium{grid-template-columns:1fr}.outright-grid{grid-template-columns:1fr}.nav-tab{padding:5px 8px;font-size:12px}}
+.editable-note{background:rgba(79,142,247,.08);border:1px solid rgba(79,142,247,.25);border-radius:8px;padding:10px 14px;font-size:12px;color:#93bffd;margin-bottom:14px}
+.fixture-row{display:grid;grid-template-columns:90px 1fr 32px 1fr;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)}
+.fixture-row:last-child{border-bottom:none}
+.fixture-stage-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin:14px 0 6px;font-weight:700}
+@media(max-width:600px){.stats-row{grid-template-columns:1fr 1fr}.podium{grid-template-columns:1fr}.outright-grid{grid-template-columns:1fr}.nav-tab{padding:5px 8px;font-size:12px}.fixture-row{grid-template-columns:70px 1fr 24px 1fr}}
 </style>
 </head>
 <body>
@@ -365,11 +369,34 @@ input,select,button{font-family:inherit}
         </div>
         <div class="chips" id="player-chips"></div>
       </div>
+
+      <!-- NEW: Admin-editable knockout fixtures -->
+      <div class="admin-block">
+        <div class="admin-block-title">Knockout fixtures <span class="badge-sm">Round of 16 → Final</span></div>
+        <div class="editable-note">📝 Group Stage and Round of 32 are fixed and cannot be edited here. As each knockout round finishes, type in the real team names below — players will see the update immediately.</div>
+        <div id="fixture-editor"></div>
+        <button class="btn btn-primary" style="margin-top:12px" onclick="saveFixtures()">Save fixture names</button>
+      </div>
+
       <div class="admin-block">
         <div class="admin-block-title">Outright answers <span class="badge-sm">enter when known</span></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px" id="outright-admin"></div>
         <button class="btn btn-primary" style="margin-top:12px" onclick="saveOutrightAnswers()">Save answers</button>
       </div>
+
+      <!-- NEW: Admin full read/write on every player's outright picks -->
+      <div class="admin-block">
+        <div class="admin-block-title">Edit a player's outright picks <span class="badge-sm">view & correct any pick</span></div>
+        <div class="info-box">Fixes shorthand mismatches (e.g. player typed "Messi" — already auto-matched against "Lionel Messi" during scoring) or lets you enter picks on a player's behalf. Bypasses the Jun 20 lock.</div>
+        <div class="input-row" style="margin-bottom:12px">
+          <select class="fsel" id="aop-player-sel" onchange="renderAdminOutrightRow()">
+            <option value="">— Select player —</option>
+          </select>
+        </div>
+        <div id="admin-outright-editor"></div>
+        <button class="btn btn-primary" style="margin-top:12px" onclick="saveAdminOutright()">Save player's outrights</button>
+      </div>
+
       <div class="admin-block">
         <div class="admin-block-title">Manual result entry</div>
         <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
@@ -420,6 +447,7 @@ input,select,button{font-family:inherit}
 <script>
 let config=null,allData=null,locks={},currentPlayer=null,currentPin=null,myPreds={},myOutrightPreds={},adminUnlocked=false,currentStage='Group Stage';
 let pinBuffer='',pinTarget=null;
+let fixturesData=null;
 const STAGES=['Group Stage','Round of 32','Round of 16','Quarter-finals','Semi-finals','Final'];
 const OUTRIGHT_LOCK_DATE = new Date('2026-06-20T23:59:00Z');
 function outrightsAreLocked(){ return Date.now() >= OUTRIGHT_LOCK_DATE.getTime(); }
@@ -666,7 +694,7 @@ function renderOutrightsGrid(answers,locked){
   }).join('');
 }
 async function saveOutrights(){
-  if(!currentPlayer||outrightsAreLocked()){showToast('Outrights are locked (Jun 15 deadline)','err');return;}
+  if(!currentPlayer||outrightsAreLocked()){showToast('Outrights are locked (Jun 20 deadline)','err');return;}
   const preds={};
   config.outrights.forEach(o=>{ const i=document.getElementById('op-'+o.id); if(i) preds[o.id]=i.value.trim(); });
   Object.assign(myOutrightPreds,preds);
@@ -740,6 +768,7 @@ async function renderAdminPage(){
   // Always refresh so results table shows latest saved scores
   allData = await api('/api/all-predictions');
   renderOutrightAdmin(); renderResultsTable(); renderAdminPredRow();
+  renderFixtureEditor(); renderAdminOutrightRow();
 }
 function renderPlayerChips(){
   document.getElementById('player-count').textContent=config.players.length;
@@ -998,6 +1027,113 @@ async function saveAdminPred(){
     Object.assign(allData.predictions[playerId], predictions);
     showToast(`Saved ${Object.keys(predictions).length} predictions for ${config.players.find(p=>p.id===playerId)?.name}!`,'ok');
     renderAdminPredRow();
+  } catch(e){ showToast('Error: '+e.message,'err'); }
+}
+
+// ── NEW: Admin-editable knockout fixtures (Round of 16 → Final) ─────────────
+async function renderFixtureEditor(){
+  const wrap = document.getElementById('fixture-editor');
+  if(!wrap) return;
+  try{
+    fixturesData = await api('/api/admin/fixtures','GET',null,getAdminPw());
+  } catch(e){
+    wrap.innerHTML = `<div style="color:var(--red);font-size:13px">Could not load fixtures: ${e.message}</div>`;
+    return;
+  }
+  const byStage = {};
+  fixturesData.fixtures.forEach(f=>{ (byStage[f.stage]=byStage[f.stage]||[]).push(f); });
+
+  let html = '';
+  ['Round of 16','Quarter-finals','Semi-finals','3rd Place','Final'].forEach(stage=>{
+    const list = byStage[stage];
+    if(!list || !list.length) return;
+    html += `<div class="fixture-stage-label">${stage}</div>`;
+    list.forEach(f=>{
+      const ko = f.kickoff ? new Date(f.kickoff).toLocaleDateString('en-GB',{day:'numeric',month:'short',timeZone:'Asia/Dubai'}) : '';
+      html += `<div class="fixture-row">
+        <span style="font-size:11px;color:var(--text3)">${ko}</span>
+        <input class="txt-inp" id="fx-home-${f.id}" value="${esc(f.home)}" placeholder="${esc(f.defaultHome)}">
+        <span style="text-align:center;color:var(--text3);font-size:12px">v</span>
+        <input class="txt-inp" id="fx-away-${f.id}" value="${esc(f.away)}" placeholder="${esc(f.defaultAway)}">
+      </div>`;
+    });
+  });
+  wrap.innerHTML = html || '<div style="color:var(--text3);font-size:13px">No knockout fixtures found.</div>';
+}
+
+async function saveFixtures(){
+  if(!fixturesData) { showToast('Fixtures not loaded yet','err'); return; }
+  let saved = 0, failed = 0;
+  for(const f of fixturesData.fixtures){
+    const homeInp = document.getElementById('fx-home-'+f.id);
+    const awayInp = document.getElementById('fx-away-'+f.id);
+    if(!homeInp || !awayInp) continue;
+    const home = homeInp.value.trim();
+    const away = awayInp.value.trim();
+    // Only push an update if something actually changed from what's currently set
+    if(home === f.home && away === f.away) continue;
+    try{
+      await api('/api/admin/fixtures/'+f.id,'POST',{home,away},getAdminPw());
+      saved++;
+    } catch(e){ failed++; }
+  }
+  if(saved === 0 && failed === 0){ showToast('No changes to save','ok'); return; }
+  showToast(`${saved} fixture${saved!==1?'s':''} updated${failed?`, ${failed} failed`:''}! ✓`,failed?'err':'ok');
+  // Refresh config so match cards / all-picks reflect new team names immediately
+  config = await api('/api/config');
+  renderFixtureEditor();
+}
+
+// ── NEW: Admin full read/write on every player's outright picks ─────────────
+let adminOutrightData = null;
+
+async function renderAdminOutrightRow(){
+  const sel = document.getElementById('aop-player-sel');
+  if(sel && config){
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">— Select player —</option>' +
+      config.players.map(p=>`<option value="${p.id}" ${p.id===cur?'selected':''}>${esc(p.name)}</option>`).join('');
+    if(cur) sel.value = cur;
+  }
+
+  const playerId = document.getElementById('aop-player-sel')?.value;
+  const wrap = document.getElementById('admin-outright-editor');
+  if(!wrap) return;
+  if(!playerId){ wrap.innerHTML='<div style="color:var(--text3);font-size:13px">Select a player above.</div>'; return; }
+
+  try{
+    adminOutrightData = await api('/api/admin/outright-predictions','GET',null,getAdminPw());
+  } catch(e){
+    wrap.innerHTML = `<div style="color:var(--red);font-size:13px">Could not load: ${e.message}</div>`;
+    return;
+  }
+
+  const preds = adminOutrightData.outright_preds[playerId] || {};
+  const answers = adminOutrightData.outright_answers || {};
+
+  wrap.innerHTML = `<div class="outright-grid" style="margin-bottom:0">` + config.outrights.map(o=>{
+    const val = preds[o.id] || '';
+    const ans = answers[o.id];
+    return `<div class="outright-card">
+      <div class="outright-label">${o.label} <span class="outright-pts">+${o.pts}pts</span></div>
+      <input class="outright-inp" id="aop-${o.id}" value="${esc(val)}" placeholder="Enter pick…">
+      ${ans?`<div class="outright-answer" style="color:var(--text3)">Actual: ${esc(ans)}</div>`:''}
+    </div>`;
+  }).join('') + `</div>`;
+}
+
+async function saveAdminOutright(){
+  const playerId = document.getElementById('aop-player-sel')?.value;
+  if(!playerId){ showToast('Select a player first','err'); return; }
+  const outright_preds = {};
+  config.outrights.forEach(o=>{
+    const inp = document.getElementById('aop-'+o.id);
+    if(inp) outright_preds[o.id] = inp.value.trim();
+  });
+  try{
+    await api('/api/admin/outright-predictions/'+playerId,'POST',{outright_preds},getAdminPw());
+    showToast(`Saved outright picks for ${config.players.find(p=>p.id===playerId)?.name}! ✓`,'ok');
+    renderAdminOutrightRow();
   } catch(e){ showToast('Error: '+e.message,'err'); }
 }
 
