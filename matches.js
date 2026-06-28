@@ -1,5 +1,8 @@
 // FIFA World Cup 2026 — Official Fixture List
 // Source: WC2026_Fixture_List.xlsx (user-provided official schedule)
+// Group Stage (IDs 1-72): UNCHANGED — exactly as provided
+// Round of 32 (IDs 73-88): UPDATED with confirmed qualified teams (group stage finished 27-28 Jun)
+// Round of 16 / QF / SF / Final (IDs 89-104): admin-editable placeholders — update via Admin panel as each round concludes
 // All times in GST (Dubai, UTC+4), stored internally as UTC ISO strings
 
 const MATCHES = [];
@@ -13,7 +16,7 @@ function gst(date, time) {
   return d.toISOString();
 }
 
-// ── GROUP STAGE — 72 matches, #1-72 from fixture list ────────────────────────
+// ── GROUP STAGE — 72 matches, #1-72 from fixture list — DO NOT CHANGE ────────
 const gs = [
   // # Group   Date          Home                  Away                    Time(GST)
   [1, 'A','2026-06-11','Mexico','South Africa','23:00'],
@@ -94,30 +97,31 @@ for (const [num, grp, date, home, away, time] of gs) {
   MATCHES.push({ id: num, stage: 'Group Stage', group: `Group ${grp}`, home, away, kickoff: gst(date, time) });
 }
 
-// ── ROUND OF 32 — #73-88 ───────────────────────────────────────────────────
+// ── ROUND OF 32 — #73-88 — CONFIRMED TEAMS (group stage finished 27-28 Jun 2026) ──
 const r32 = [
-  [73,'2026-06-28','2A','2B','23:00'],
-  [74,'2026-06-29','1C','2F','21:00'],
-  [75,'2026-06-30','1E','3ABCDF','00:30'],
-  [76,'2026-06-30','1F','2C','05:00'],
-  [77,'2026-06-30','2E','2I','21:00'],
-  [78,'2026-07-01','1I','3CDFGH','01:00'],
-  [79,'2026-07-01','1A','3CEFHI','05:00'],
-  [80,'2026-07-01','1L','3EHIJK','20:00'],
-  [81,'2026-07-02','1G','3AEHIJ','00:00'],
-  [82,'2026-07-02','1D','3BEFIJ','04:00'],
-  [83,'2026-07-02','1H','2J','23:00'],
-  [84,'2026-07-03','2K','2L','03:00'],
-  [85,'2026-07-03','1B','3EFGIJ','07:00'],
-  [86,'2026-07-03','2D','2G','22:00'],
-  [87,'2026-07-04','1J','2H','02:00'],
-  [88,'2026-07-04','1K','3DEIJL','05:30'],
+  [73,'2026-06-28','South Africa','Canada','23:00'],
+  [74,'2026-06-30','Germany','Paraguay','00:30'],
+  [75,'2026-06-30','Netherlands','Morocco','05:00'],
+  [76,'2026-06-29','Brazil','Japan','21:00'],
+  [77,'2026-07-01','France','Sweden','01:00'],
+  [78,'2026-06-30','Ivory Coast','Norway','21:00'],
+  [79,'2026-07-01','Mexico','Ecuador','05:00'],
+  [80,'2026-07-01','England','DR Congo','20:00'],
+  [81,'2026-07-02','USA','Bosnia and Herzegovina','04:00'],
+  [82,'2026-07-02','Belgium','Senegal','00:00'],
+  [83,'2026-07-03','Portugal','Croatia','03:00'],
+  [84,'2026-07-02','Spain','Austria','23:00'],
+  [85,'2026-07-03','Switzerland','Algeria','07:00'],
+  [86,'2026-07-04','Argentina','Cape Verde','02:00'],
+  [87,'2026-07-04','Colombia','Ghana','05:30'],
+  [88,'2026-07-03','Australia','Egypt','22:00'],
 ];
 for (const [num, date, home, away, time] of r32) {
   MATCHES.push({ id: num, stage: 'Round of 32', group: null, home, away, kickoff: gst(date, time) });
 }
 
-// ── ROUND OF 16 — #89-96 ───────────────────────────────────────────────────
+// ── ROUND OF 16 — #89-96 — admin-editable placeholders ──────────────────────
+// Update team names via Admin panel once Round of 32 results are known
 const r16 = [
   [89,'2026-07-04','W73','W75','21:00'],
   [90,'2026-07-05','W74','W77','01:00'],
@@ -132,7 +136,7 @@ for (const [num, date, home, away, time] of r16) {
   MATCHES.push({ id: num, stage: 'Round of 16', group: null, home, away, kickoff: gst(date, time) });
 }
 
-// ── QUARTER-FINALS — #97-100 ─────────────────────────────────────────────────
+// ── QUARTER-FINALS — #97-100 — admin-editable placeholders ──────────────────
 const qf = [
   [97, '2026-07-10','W89','W90','00:00'],
   [98, '2026-07-10','W93','W94','23:00'],
@@ -143,7 +147,7 @@ for (const [num, date, home, away, time] of qf) {
   MATCHES.push({ id: num, stage: 'Quarter-finals', group: null, home, away, kickoff: gst(date, time) });
 }
 
-// ── SEMI-FINALS — #101-102 ───────────────────────────────────────────────────
+// ── SEMI-FINALS — #101-102 — admin-editable placeholders ─────────────────────
 const sf = [
   [101,'2026-07-14','W97','W98','23:00'],
   [102,'2026-07-15','W99','W100','23:00'],
@@ -152,7 +156,7 @@ for (const [num, date, home, away, time] of sf) {
   MATCHES.push({ id: num, stage: 'Semi-finals', group: null, home, away, kickoff: gst(date, time) });
 }
 
-// ── 3RD PLACE & FINAL — #103-104 ─────────────────────────────────────────────
+// ── 3RD PLACE & FINAL — #103-104 — admin-editable placeholders ──────────────
 MATCHES.push({ id: 103, stage: '3rd Place', group: null, home: 'RU101', away: 'RU102', kickoff: gst('2026-07-19', '01:00') });
 MATCHES.push({ id: 104, stage: 'Final', group: null, home: 'W101', away: 'W102', kickoff: gst('2026-07-19', '23:00') });
 

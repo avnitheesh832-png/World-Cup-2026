@@ -29,6 +29,7 @@ function initDB() {
     outright_preds: {},
     results: {},
     outright_answers: {},
+    fixtureOverrides: {},   // NEW: admin-editable knockout team names, keyed by match id
     lastSync: null,
     apiKey: API_FOOTBALL_KEY,
   };
@@ -37,6 +38,16 @@ function initDB() {
 function saveDB(db) {
   fs.mkdirSync(path.dirname(DATA_FILE), { recursive: true });
   fs.writeFileSync(DATA_FILE, JSON.stringify(db, null, 2));
+}
+
+// Merge admin-edited knockout team names (Round of 16 / QF / SF / Final) into MATCHES
+function getMatchesWithOverrides(db) {
+  const overrides = db.fixtureOverrides || {};
+  return MATCHES.map(m => {
+    const ov = overrides[m.id];
+    if (ov) return { ...m, home: ov.home || m.home, away: ov.away || m.away };
+    return m;
+  });
 }
 
 // ─── Auth middleware ──────────────────────────────────────────────────────────
@@ -52,8 +63,7 @@ function adminAuth(req, res, next) {
 function isMatchLocked(matchId) {
   const match = MATCHES.find(m => m.id == matchId);
   if (!match || !match.kickoff) return false;
-  // Lock exactly at kickoff time (no early lock)
-  return Date.now() >= new Date(match.kickoff).getTime();
+  return Date.now() >= new Date(match.kickoff).getTime() - 5 * 60 * 1000;
 }
 
 function getMatchResult(hs, as) {
@@ -61,6 +71,9 @@ function getMatchResult(hs, as) {
   if (hs < as) return 'A';
   return 'D';
 }
+
+// Editable stages where admin can rename teams (knockout rounds only — group stage is locked)
+const EDITABLE_STAGES = ['Round of 16', 'Quarter-finals', 'Semi-finals', '3rd Place', 'Final'];
 
 // ─── Scoring ──────────────────────────────────────────────────────────────────
 
@@ -96,6 +109,7 @@ async function syncLiveResults(db) {
     if (data.errors && Object.keys(data.errors).length > 0) return { updated: 0, error: JSON.stringify(data.errors) };
     const fixtures = data.response || [];
     let updated = 0;
+    const liveMatches = getMatchesWithOverrides(db);
     fixtures.forEach(f => {
       const hs = f.goals.home, as = f.goals.away;
       const st = f.fixture.status.short;
@@ -103,7 +117,7 @@ async function syncLiveResults(db) {
       const status = statusMap[st] || '';
       if (hs === null || as === null) return;
       const home = f.teams.home.name, away = f.teams.away.name;
-      const match = MATCHES.find(m =>
+      const match = liveMatches.find(m =>
         m.home.toLowerCase() === home.toLowerCase() || m.away.toLowerCase() === away.toLowerCase() ||
         home.toLowerCase().includes(m.home.split(' ')[0].toLowerCase())
       );
@@ -146,13 +160,13 @@ app.post('/api/verify-pin/:playerId', (req, res) => {
 app.get('/api/config', (req, res) => {
   const db = loadDB();
   res.json({
-    matches: MATCHES,
+    matches: getMatchesWithOverrides(db),
     outrights: OUTRIGHTS,
     // Only expose name + id + whether PIN is set (never the actual PIN)
     players: db.players.map(p => ({ id: p.id, name: p.name, hasPin: !!p.pin })),
     lockMinutes: 5,
     now: new Date().toISOString(),
-    outrightsLocked: Date.now() >= new Date('2026-06-20T23:59:00Z').getTime(),
+    outrightsLocked: Date.now() >= new Date('2026-06-15T23:59:00Z').getTime(),
   });
 });
 
@@ -209,7 +223,7 @@ app.post('/api/predictions/:playerId', (req, res) => {
   }
 
   if (outright_preds) {
-    const OUTRIGHT_LOCK = new Date('2026-06-20T23:59:00Z');
+    const OUTRIGHT_LOCK = new Date('2026-06-15T23:59:00Z');
     const outrightsLocked = Date.now() >= OUTRIGHT_LOCK.getTime();
     if (!outrightsLocked) {
       if (!db.outright_preds[req.params.playerId]) db.outright_preds[req.params.playerId] = {};
@@ -280,11 +294,36 @@ app.delete('/api/admin/players/:id', adminAuth, (req, res) => {
   res.json({ ok: true });
 });
 
+// ── Outright answers (the ACTUAL outcome — e.g. who really won the Golden Boot) ──
 app.post('/api/admin/outrights', adminAuth, (req, res) => {
   const db = loadDB();
   Object.assign(db.outright_answers, req.body.answers);
   saveDB(db);
   res.json({ ok: true });
+});
+
+// NEW — full read access: every player's outright PREDICTIONS in one place for admin
+app.get('/api/admin/outright-predictions', adminAuth, (req, res) => {
+  const db = loadDB();
+  res.json({
+    players: db.players.map(p => ({ id: p.id, name: p.name })),
+    outright_preds: db.outright_preds,
+    outright_answers: db.outright_answers,
+  });
+});
+
+// NEW — full write access: admin can directly set/correct ANY player's outright pick
+// Bypasses the Jun 15 lock entirely (admin override, same pattern as prediction editor)
+app.post('/api/admin/outright-predictions/:playerId', adminAuth, (req, res) => {
+  const db = loadDB();
+  const player = db.players.find(p => p.id === req.params.playerId);
+  if (!player) return res.status(404).json({ error: 'Player not found' });
+  const { outright_preds } = req.body;
+  if (!outright_preds) return res.status(400).json({ error: 'outright_preds required' });
+  if (!db.outright_preds[req.params.playerId]) db.outright_preds[req.params.playerId] = {};
+  Object.assign(db.outright_preds[req.params.playerId], outright_preds);
+  saveDB(db);
+  res.json({ ok: true, saved: Object.keys(outright_preds).length });
 });
 
 app.post('/api/admin/results', adminAuth, (req, res) => {
@@ -339,6 +378,50 @@ app.post('/api/admin/predictions/:playerId', adminAuth, (req, res) => {
   }
   saveDB(db);
   res.json({ ok: true, saved: Object.keys(predictions||{}).length });
+});
+
+// NEW — Admin-editable knockout fixtures (Round of 16 / QF / SF / Final)
+// Lets admin rename the placeholder team slots (e.g. "W73", "W74") to real team names
+// once each round's results are known. Group stage and Round of 32 are NOT editable here.
+app.get('/api/admin/fixtures', adminAuth, (req, res) => {
+  const db = loadDB();
+  const editable = MATCHES.filter(m => EDITABLE_STAGES.includes(m.stage)).map(m => {
+    const ov = (db.fixtureOverrides || {})[m.id];
+    return {
+      id: m.id,
+      stage: m.stage,
+      kickoff: m.kickoff,
+      defaultHome: m.home,
+      defaultAway: m.away,
+      home: ov?.home || m.home,
+      away: ov?.away || m.away,
+    };
+  });
+  res.json({ fixtures: editable });
+});
+
+app.post('/api/admin/fixtures/:matchId', adminAuth, (req, res) => {
+  const db = loadDB();
+  const match = MATCHES.find(m => m.id == req.params.matchId);
+  if (!match) return res.status(404).json({ error: 'Match not found' });
+  if (!EDITABLE_STAGES.includes(match.stage)) {
+    return res.status(400).json({ error: 'Only Round of 16, Quarter-finals, Semi-finals, 3rd Place and Final fixtures can be edited' });
+  }
+  const { home, away } = req.body;
+  if (!db.fixtureOverrides) db.fixtureOverrides = {};
+  db.fixtureOverrides[match.id] = {
+    home: home || match.home,
+    away: away || match.away,
+  };
+  saveDB(db);
+  res.json({ ok: true, fixture: db.fixtureOverrides[match.id] });
+});
+
+app.delete('/api/admin/fixtures/:matchId', adminAuth, (req, res) => {
+  const db = loadDB();
+  if (db.fixtureOverrides) delete db.fixtureOverrides[req.params.matchId];
+  saveDB(db);
+  res.json({ ok: true });
 });
 
 app.get('/api/admin/export', adminAuth, (req, res) => {
