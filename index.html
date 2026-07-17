@@ -174,7 +174,12 @@ input,select,button{font-family:inherit}
 .toast.show{opacity:1}.toast.ok{border-color:var(--green);color:var(--green)}.toast.err{border-color:var(--red);color:var(--red)}
 .loading{display:flex;align-items:center;justify-content:center;min-height:200px;color:var(--text3);font-size:14px;gap:10px}
 .spinner{width:16px;height:16px;border:2px solid var(--border2);border-top-color:var(--gold);border-radius:50%;animation:spin .6s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
-@media(max-width:600px){.stats-row{grid-template-columns:1fr 1fr}.podium{grid-template-columns:1fr}.outright-grid{grid-template-columns:1fr}.nav-tab{padding:5px 8px;font-size:12px}}
+.editable-note{background:rgba(79,142,247,.08);border:1px solid rgba(79,142,247,.25);border-radius:8px;padding:10px 14px;font-size:12px;color:#93bffd;margin-bottom:14px}
+.fixture-row{display:grid;grid-template-columns:90px 1fr 32px 1fr;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)}
+.fixture-row:last-child{border-bottom:none}
+.fixture-stage-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin:14px 0 6px;font-weight:700}
+.pen-row{border-top:1px dashed var(--border)}
+@media(max-width:600px){.stats-row{grid-template-columns:1fr 1fr}.podium{grid-template-columns:1fr}.outright-grid{grid-template-columns:1fr}.nav-tab{padding:5px 8px;font-size:12px}.fixture-row{grid-template-columns:70px 1fr 24px 1fr}}
 </style>
 </head>
 <body>
@@ -308,14 +313,14 @@ input,select,button{font-family:inherit}
   <div id="page-outrights" class="page">
     <div class="page-header">
       <div><div class="page-title">🎯 Outright Predictions</div>
-      <div class="page-sub">10 pts each · <strong style="color:var(--red)">locked after Jun 15</strong></div></div>
+      <div class="page-sub">10 pts each · <strong style="color:var(--red)">locked after Jun 20</strong></div></div>
     </div>
     <div id="outright-locked-notice" style="display:none" class="outright-locked-notice">
-      🔒 Outrights are locked — deadline was June 15. Results will be scored as they're confirmed.
+      🔒 Outrights are locked — deadline was June 20. Results will be scored as they're confirmed.
     </div>
     <div class="outright-grid" id="outright-pred-grid"></div>
     <div class="save-bar" id="outright-save-bar">
-      <div class="save-bar-info">10 categories · 10 pts each · deadline Jun 15</div>
+      <div class="save-bar-info">10 categories · 10 pts each · deadline Jun 20</div>
       <button class="btn-save" onclick="saveOutrights()">Save ✓</button>
     </div>
   </div>
@@ -365,11 +370,34 @@ input,select,button{font-family:inherit}
         </div>
         <div class="chips" id="player-chips"></div>
       </div>
+
+      <!-- NEW: Admin-editable knockout fixtures -->
+      <div class="admin-block">
+        <div class="admin-block-title">Knockout fixtures <span class="badge-sm">Round of 16 → Final</span></div>
+        <div class="editable-note">📝 Group Stage and Round of 32 are fixed and cannot be edited here. As each knockout round finishes, type in the real team names below — players will see the update immediately.</div>
+        <div id="fixture-editor"></div>
+        <button class="btn btn-primary" style="margin-top:12px" onclick="saveFixtures()">Save fixture names</button>
+      </div>
+
       <div class="admin-block">
         <div class="admin-block-title">Outright answers <span class="badge-sm">enter when known</span></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px" id="outright-admin"></div>
         <button class="btn btn-primary" style="margin-top:12px" onclick="saveOutrightAnswers()">Save answers</button>
       </div>
+
+      <!-- NEW: Admin full read/write on every player's outright picks -->
+      <div class="admin-block">
+        <div class="admin-block-title">Edit a player's outright picks <span class="badge-sm">view & correct any pick</span></div>
+        <div class="info-box">Fixes shorthand mismatches (e.g. player typed "Messi" — already auto-matched against "Lionel Messi" during scoring) or lets you enter picks on a player's behalf. Bypasses the Jun 20 lock.</div>
+        <div class="input-row" style="margin-bottom:12px">
+          <select class="fsel" id="aop-player-sel" onchange="renderAdminOutrightRow()">
+            <option value="">— Select player —</option>
+          </select>
+        </div>
+        <div id="admin-outright-editor"></div>
+        <button class="btn btn-primary" style="margin-top:12px" onclick="saveAdminOutright()">Save player's outrights</button>
+      </div>
+
       <div class="admin-block">
         <div class="admin-block-title">Manual result entry</div>
         <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
@@ -420,7 +448,8 @@ input,select,button{font-family:inherit}
 <script>
 let config=null,allData=null,locks={},currentPlayer=null,currentPin=null,myPreds={},myOutrightPreds={},adminUnlocked=false,currentStage='Group Stage';
 let pinBuffer='',pinTarget=null;
-const STAGES=['Group Stage','Round of 32','Round of 16','Quarter-finals','Semi-finals','Final'];
+let fixturesData=null;
+const STAGES=['Group Stage','Round of 32','Round of 16','Quarter-finals','Semi-finals','3rd Place','Final'];
 const OUTRIGHT_LOCK_DATE = new Date('2026-06-20T23:59:00Z');
 function outrightsAreLocked(){ return Date.now() >= OUTRIGHT_LOCK_DATE.getTime(); }
 
@@ -577,6 +606,7 @@ function switchStage(stage,el){
 }
 function renderMatchCards(){
   const matches=config.matches.filter(m=>m.stage===currentStage).sort((a,b)=>new Date(a.kickoff)-new Date(b.kickoff));
+  const isKnockout = currentStage !== 'Group Stage';
   let html='',lastDate='',filled=0;
   matches.forEach(m=>{
     const pred=myPreds[m.id]||{};
@@ -584,6 +614,9 @@ function renderMatchCards(){
     const hs=pred.homeScore!==undefined&&pred.homeScore!==''?pred.homeScore:'';
     const as=pred.awayScore!==undefined&&pred.awayScore!==''?pred.awayScore:'';
     const res=pred.result||'';
+    const penPick=pred.penPick||'';
+    const phs=pred.penHomeScore!==undefined&&pred.penHomeScore!==null?pred.penHomeScore:'';
+    const pas=pred.penAwayScore!==undefined&&pred.penAwayScore!==null?pred.penAwayScore:'';
     if(res) filled++;
     const d=locked?'disabled':'';
     const ko=m.kickoff?new Date(m.kickoff):null;
@@ -591,6 +624,7 @@ function renderMatchCards(){
     const timeStr=ko?ko.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Dubai'}):'';
     if(dateStr!==lastDate){ html+=`<div class="date-header">${dateStr}</div>`; lastDate=dateStr; }
     const grpBadge=m.group?`<span style="background:rgba(240,192,64,.12);color:var(--gold);padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700">${m.group}</span>`:'';
+    const showPenRow = isKnockout && res==='D';
     html+=`<div class="match-card ${locked?'locked':''}">
       <div class="match-card-head"><span>${timeStr} <span style="color:var(--text3);font-size:10px">GST</span> ${grpBadge}</span><span style="color:${locked?'var(--red)':'var(--text3)'}">${locked?'🔒 Locked':''}</span></div>
       <div class="match-card-body">
@@ -602,10 +636,24 @@ function renderMatchCards(){
         </div>
         <div class="team-name right">${m.away} <span class="tm-flag">${flag(m.away)}</span></div>
       </div>
+      ${isKnockout?`<div style="text-align:center;font-size:10px;color:var(--text3);padding:0 14px 6px">Score = 90 min result. Knockout match, so a draw goes to penalties.</div>`:''}
       <div class="result-pills">
         <button class="rpill ${res==='H'?'sel-H':''}" id="rH-${m.id}" onclick="setResult(${m.id},'H')" ${d}>Home win</button>
         <button class="rpill ${res==='D'?'sel-D':''}" id="rD-${m.id}" onclick="setResult(${m.id},'D')" ${d}>Draw</button>
         <button class="rpill ${res==='A'?'sel-A':''}" id="rA-${m.id}" onclick="setResult(${m.id},'A')" ${d}>Away win</button>
+      </div>
+      <div class="pen-row" id="pen-row-${m.id}" style="display:${showPenRow?'flex':'none'};flex-direction:column;gap:8px;padding:0 14px 12px;align-items:center">
+        <span style="font-size:11px;color:var(--text3)">⚽ Predict the penalty shootout score</span>
+        <div class="score-entry">
+          <input class="score-inp" id="phs-${m.id}" type="number" min="0" max="20" value="${phs}" ${d} oninput="onPenScore(${m.id})" placeholder="0" style="width:36px;height:32px;font-size:15px">
+          <span class="score-sep">–</span>
+          <input class="score-inp" id="pas-${m.id}" type="number" min="0" max="20" value="${pas}" ${d} oninput="onPenScore(${m.id})" placeholder="0" style="width:36px;height:32px;font-size:15px">
+        </div>
+        <div style="display:flex;gap:5px">
+          <button class="rpill ${penPick==='H'?'sel-H':''}" id="penH-${m.id}" onclick="setPenPick(${m.id},'H')" ${d}>${m.home} wins</button>
+          <button class="rpill ${penPick==='A'?'sel-A':''}" id="penA-${m.id}" onclick="setPenPick(${m.id},'A')" ${d}>${m.away} wins</button>
+        </div>
+        <span style="font-size:10px;color:var(--text3)">1pt for correct winner · +5pts if the penalty score is exact too</span>
       </div>
     </div>`;
   });
@@ -617,6 +665,21 @@ function onScore(mid){
   const a=parseInt(document.getElementById('as-'+mid)?.value);
   if(!isNaN(h)&&!isNaN(a)) setResult(mid,h>a?'H':h<a?'A':'D');
 }
+function onPenScore(mid){
+  // Penalty score determines the winner automatically — keeps prediction internally consistent
+  const h=parseInt(document.getElementById('phs-'+mid)?.value);
+  const a=parseInt(document.getElementById('pas-'+mid)?.value);
+  if(!myPreds[mid]) myPreds[mid]={};
+  myPreds[mid].penHomeScore = isNaN(h)?null:h;
+  myPreds[mid].penAwayScore = isNaN(a)?null:a;
+  if(!isNaN(h)&&!isNaN(a)&&h!==a) setPenPick(mid, h>a?'H':'A');
+}
+function setPenPick(mid,p){
+  if(locks[mid]) return;
+  if(!myPreds[mid]) myPreds[mid]={};
+  myPreds[mid].penPick=p;
+  ['H','A'].forEach(x=>{ const b=document.getElementById('pen'+x+'-'+mid); if(b) b.className='rpill'+(x===p?' sel-'+x:''); });
+}
 function setResult(mid,r){
   if(locks[mid]) return;
   if(!myPreds[mid]) myPreds[mid]={};
@@ -626,6 +689,13 @@ function setResult(mid,r){
   if(hs!==''&&hs!==undefined) myPreds[mid].homeScore=parseInt(hs);
   if(as!==''&&as!==undefined) myPreds[mid].awayScore=parseInt(as);
   ['H','D','A'].forEach(x=>{ const b=document.getElementById('r'+x+'-'+mid); if(b) b.className='rpill'+(x===r?' sel-'+x:''); });
+  // Show/hide the penalty-pick row for knockout matches when a draw is selected
+  const penRow = document.getElementById('pen-row-'+mid);
+  const isKnockout = currentStage !== 'Group Stage';
+  if(penRow){
+    if(isKnockout && r==='D'){ penRow.style.display='flex'; }
+    else { penRow.style.display='none'; myPreds[mid].penPick=null; myPreds[mid].penHomeScore=null; myPreds[mid].penAwayScore=null; }
+  }
   document.getElementById('save-count').textContent=config.matches.filter(m=>m.stage===currentStage&&myPreds[m.id]&&myPreds[m.id].result&&myPreds[m.id].result!=='').length;
 }
 async function savePredictions(){
@@ -666,7 +736,7 @@ function renderOutrightsGrid(answers,locked){
   }).join('');
 }
 async function saveOutrights(){
-  if(!currentPlayer||outrightsAreLocked()){showToast('Outrights are locked (Jun 15 deadline)','err');return;}
+  if(!currentPlayer||outrightsAreLocked()){showToast('Outrights are locked (Jun 20 deadline)','err');return;}
   const preds={};
   config.outrights.forEach(o=>{ const i=document.getElementById('op-'+o.id); if(i) preds[o.id]=i.value.trim(); });
   Object.assign(myOutrightPreds,preds);
@@ -704,13 +774,21 @@ function renderAllPreds(){
     const res=allData.results[m.id];
     const done=res&&res.status==='FT';
     const ar=done?(res.homeScore>res.awayScore?'H':res.homeScore<res.awayScore?'A':'D'):null;
-    const aStr=done?`${res.homeScore}–${res.awayScore}`:res&&res.status==='LIVE'?`${res.homeScore}–${res.awayScore} 🟢`:'–';
+    const penNote = res && res.penWinner ? ` <span style="color:var(--gold);font-size:10px">(pens: ${flag(res.penWinner==='H'?m.home:m.away)})</span>` : '';
+    const aStr=done?`${res.homeScore}–${res.awayScore}${penNote}`:res&&res.status==='LIVE'?`${res.homeScore}–${res.awayScore} 🟢`:'–';
     const cells=players.map(p=>{
       const pred=(allData.predictions[p.id]||{})[m.id];
       if(!pred||!pred.result) return`<td><span class="pred-chip" style="color:var(--text3)">–</span></td>`;
-      const ps=pred.homeScore!==undefined&&pred.homeScore!==''?`${pred.homeScore}–${pred.awayScore}`:pred.result;
+      const penPickNote = pred.penPick ? ` <span style="opacity:.7">(p)</span>` : '';
+      const ps=(pred.homeScore!==undefined&&pred.homeScore!==''?`${pred.homeScore}–${pred.awayScore}`:pred.result)+penPickNote;
       let cls='';
-      if(done){const cs=String(pred.homeScore)===String(res.homeScore)&&String(pred.awayScore)===String(res.awayScore);cls=cs?'correct':pred.result===ar?'close':'wrong';}
+      if(done){
+        const cs=String(pred.homeScore)===String(res.homeScore)&&String(pred.awayScore)===String(res.awayScore);
+        let resultCorrect;
+        if(res.penWinner){ resultCorrect = pred.result==='D' && pred.penPick===res.penWinner; }
+        else { resultCorrect = pred.result===ar; }
+        cls=cs?'correct':resultCorrect?'close':'wrong';
+      }
       return`<td><span class="pred-chip ${cls}">${ps}</span></td>`;
     }).join('');
     const ko=m.kickoff?new Date(m.kickoff).toLocaleDateString('en-GB',{day:'numeric',month:'short',timeZone:'Asia/Dubai'}):'';
@@ -740,6 +818,7 @@ async function renderAdminPage(){
   // Always refresh so results table shows latest saved scores
   allData = await api('/api/all-predictions');
   renderOutrightAdmin(); renderResultsTable(); renderAdminPredRow();
+  renderFixtureEditor(); renderAdminOutrightRow();
 }
 function renderPlayerChips(){
   document.getElementById('player-count').textContent=config.players.length;
@@ -790,6 +869,7 @@ function renderResultsTable(){
   const stage=document.getElementById('res-stage-sel')?.value||'Group Stage';
   const search=(document.getElementById('res-search')?.value||'').toLowerCase();
   const filterEl=document.getElementById('res-filter')?.value||'all';
+  const isKnockout = stage !== 'Group Stage';
   const matches=config.matches.filter(m=>{
     if(m.stage!==stage) return false;
     if(search&&!m.home.toLowerCase().includes(search)&&!m.away.toLowerCase().includes(search)) return false;
@@ -802,17 +882,26 @@ function renderResultsTable(){
   const rows=matches.map(m=>{
     const r=res[m.id]||{};
     const hasResult=r.status==='FT'||r.status==='LIVE';
+    const isLevel = r.homeScore!==undefined && r.awayScore!==undefined && String(r.homeScore)===String(r.awayScore);
     const ko=m.kickoff?new Date(m.kickoff).toLocaleDateString('en-GB',{day:'numeric',month:'short',timeZone:'Asia/Dubai'}):'';
     const rowBg=hasResult?'background:rgba(34,197,94,.05)':'';
-    const scoreDisplay=hasResult?`<span style="font-size:11px;font-weight:700;color:var(--green)">${r.homeScore}–${r.awayScore}</span>`:'';
+    const scoreDisplay=hasResult?`<span style="font-size:11px;font-weight:700;color:var(--green)">${r.homeScore}–${r.awayScore}${r.penWinner?' (pens '+r.penHomeScore+'-'+r.penAwayScore+', '+(r.penWinner==='H'?m.home:m.away)+' win)':''}</span>`:'';
+    const penCell = isKnockout ? `<td>
+        <div class="score-entry" id="pen-inputs-${m.id}" style="display:${isLevel?'flex':'none'};gap:3px">
+          <input class="s-inp" id="rpenh-${m.id}" value="${r.penHomeScore??''}" type="number" min="0" max="20" placeholder="0" style="width:30px">
+          <span style="color:var(--text3);font-size:11px">-</span>
+          <input class="s-inp" id="rpena-${m.id}" value="${r.penAwayScore??''}" type="number" min="0" max="20" placeholder="0" style="width:30px">
+        </div>
+      </td>` : '';
     return`<tr style="${rowBg}">
       <td style="color:var(--text2);font-size:11px;white-space:nowrap">${ko}</td>
       <td style="font-size:12px;white-space:nowrap">${flag(m.home)} ${m.home}</td>
-      <td><input class="s-inp" id="rhs-${m.id}" value="${r.homeScore??''}" type="number" min="0" max="20" placeholder="0" style="${hasResult?'border-color:rgba(34,197,94,.4)':''}"></td>
+      <td><input class="s-inp" id="rhs-${m.id}" value="${r.homeScore??''}" type="number" min="0" max="20" placeholder="0" style="${hasResult?'border-color:rgba(34,197,94,.4)':''}" ${isKnockout?`oninput="onResScoreInput(${m.id})"`:''}></td>
       <td style="color:var(--text3);text-align:center">–</td>
-      <td><input class="s-inp" id="ras-${m.id}" value="${r.awayScore??''}" type="number" min="0" max="20" placeholder="0" style="${hasResult?'border-color:rgba(34,197,94,.4)':''}"></td>
+      <td><input class="s-inp" id="ras-${m.id}" value="${r.awayScore??''}" type="number" min="0" max="20" placeholder="0" style="${hasResult?'border-color:rgba(34,197,94,.4)':''}" ${isKnockout?`oninput="onResScoreInput(${m.id})"`:''}></td>
       <td style="font-size:12px;white-space:nowrap">${flag(m.away)} ${m.away}</td>
       <td><select class="ssel" id="rst-${m.id}"><option value="">–</option><option ${r.status==='FT'?'selected':''} value="FT">FT</option><option value="LIVE" ${r.status==='LIVE'?'selected':''}>LIVE</option></select></td>
+      ${penCell}
       <td>${scoreDisplay}</td>
     </tr>`;
   }).join('');
@@ -822,24 +911,64 @@ function renderResultsTable(){
     <div style="font-size:12px;color:var(--text2);margin-bottom:8px">
       <span style="color:var(--green);font-weight:600">${count} results entered</span> · 
       <span>Green rows = already saved · just edit and re-save to correct any score</span>
+      ${isKnockout?' · <span style="color:var(--gold)">If scores are level, enter the actual penalty shootout score (winner is derived automatically)</span>':''}
     </div>
     <table class="res-table">
-      <thead><tr><th>Date</th><th>Home</th><th colspan="3">Score</th><th>Away</th><th>Status</th><th>Saved</th></tr></thead>
+      <thead><tr><th>Date</th><th>Home</th><th colspan="3">Score</th><th>Away</th><th>Status</th>${isKnockout?'<th>Pens score</th>':''}<th>Saved</th></tr></thead>
       <tbody>${rows}</tbody>
     </table>`;
 }
+function onResScoreInput(mid){
+  const h=document.getElementById('rhs-'+mid)?.value;
+  const a=document.getElementById('ras-'+mid)?.value;
+  const penWrap=document.getElementById('pen-inputs-'+mid);
+  if(!penWrap) return;
+  const isLevel = h!=='' && a!=='' && h===a;
+  penWrap.style.display = isLevel ? 'flex' : 'none';
+  if(!isLevel){
+    const ph=document.getElementById('rpenh-'+mid), pa=document.getElementById('rpena-'+mid);
+    if(ph) ph.value=''; if(pa) pa.value='';
+  }
+}
 async function saveManualResults(){
   const stage=document.getElementById('res-stage-sel')?.value||'Group Stage';
+  const isKnockout = stage !== 'Group Stage';
   const results={};
+  let blocked = false;
   config.matches.filter(m=>m.stage===stage).forEach(m=>{
     const hs=document.getElementById('rhs-'+m.id)?.value;
     const as=document.getElementById('ras-'+m.id)?.value;
     const st=document.getElementById('rst-'+m.id)?.value;
-    if(hs!==''&&as!==''&&st) results[m.id]={homeScore:hs,awayScore:as,status:st};
+    const penH=document.getElementById('rpenh-'+m.id)?.value;
+    const penA=document.getElementById('rpena-'+m.id)?.value;
+    const hasPenScore = isKnockout && penH!==undefined && penA!==undefined && penH!=='' && penA!=='' && penH!==penA;
+    const penWinner = hasPenScore ? (Number(penH)>Number(penA)?'H':'A') : null;
+    if(hs!==''&&as!==''&&st){
+      if(hs===as&&isKnockout&&st==='FT'&&!hasPenScore){
+        showToast(`${m.home} v ${m.away} is level — enter the penalty shootout score before saving`,'err');
+        blocked = true;
+        return;
+      }
+      results[m.id]={
+        homeScore:hs, awayScore:as, status:st,
+        penWinner,
+        penHomeScore: hasPenScore ? penH : null,
+        penAwayScore: hasPenScore ? penA : null,
+      };
+    }
   });
-  await api('/api/admin/results','POST',{results},getAdminPw());
+  if(blocked) return;
+  try{
+    await api('/api/admin/results','POST',{results},getAdminPw());
+  } catch(e){ return; }
   if(!allData)allData={};allData.results=allData.results||{};
-  for(const[mid,r]of Object.entries(results)){const h=parseInt(r.homeScore),a=parseInt(r.awayScore);allData.results[mid]={homeScore:h,awayScore:a,status:r.status,result:h>a?'H':h<a?'A':'D'};}
+  for(const[mid,r]of Object.entries(results)){
+    const h=parseInt(r.homeScore),a=parseInt(r.awayScore);
+    let result;
+    if(h===a){ result = (r.penWinner==='H'||r.penWinner==='A') ? r.penWinner : 'D'; }
+    else { result = h>a?'H':'A'; }
+    allData.results[mid]={homeScore:h,awayScore:a,status:r.status,penWinner:r.penWinner,penHomeScore:r.penHomeScore,penAwayScore:r.penAwayScore,result};
+  }
   showToast('Results saved! ✓','ok'); loadLeaderboard();
 }
 async function exportDB(){
@@ -910,6 +1039,7 @@ function renderAdminPredRow(){
   const playerId = document.getElementById('ap-player-sel')?.value;
   const search = (document.getElementById('ap-match-search')?.value||'').toLowerCase();
   const stage = document.getElementById('ap-stage-sel')?.value||'Group Stage';
+  const isKnockout = stage !== 'Group Stage';
   const wrap = document.getElementById('admin-pred-editor');
   if(!wrap) return;
   if(!playerId){ wrap.innerHTML='<div style="color:var(--text3);font-size:13px">Select a player above.</div>'; return; }
@@ -928,8 +1058,17 @@ function renderAdminPredRow(){
     const hs = pred.homeScore!==undefined ? pred.homeScore : '';
     const as = pred.awayScore!==undefined ? pred.awayScore : '';
     const res = pred.result||'';
+    const phs = pred.penHomeScore!==undefined&&pred.penHomeScore!==null ? pred.penHomeScore : '';
+    const pas = pred.penAwayScore!==undefined&&pred.penAwayScore!==null ? pred.penAwayScore : '';
     const hasPred = res !== '';
     const ko = m.kickoff ? new Date(m.kickoff).toLocaleDateString('en-GB',{day:'numeric',month:'short',timeZone:'Asia/Dubai'}) : '';
+    const penCell = isKnockout ? `<td>
+        <div class="score-entry" id="appen-wrap-${m.id}" style="display:${res==='D'?'flex':'none'};gap:3px">
+          <input class="s-inp" id="appenh-${m.id}" value="${phs}" type="number" min="0" max="20" placeholder="0" style="width:30px">
+          <span style="color:var(--text3);font-size:11px">-</span>
+          <input class="s-inp" id="appena-${m.id}" value="${pas}" type="number" min="0" max="20" placeholder="0" style="width:30px">
+        </div>
+      </td>` : '';
     return `<tr style="${hasPred?'background:rgba(34,197,94,.05)':''}">
       <td style="font-size:11px;color:var(--text2);white-space:nowrap">${ko}</td>
       <td style="font-size:12px;white-space:nowrap">${flag(m.home)} ${m.home}</td>
@@ -938,28 +1077,40 @@ function renderAdminPredRow(){
       <td><input class="s-inp" id="apa-${m.id}" value="${as}" type="number" min="0" max="20" placeholder="0" oninput="apAutoRes(${m.id})"></td>
       <td style="font-size:12px;white-space:nowrap">${flag(m.away)} ${m.away}</td>
       <td>
-        <select class="ssel" id="apr-${m.id}">
+        <select class="ssel" id="apr-${m.id}" onchange="apOnResultChange(${m.id})">
           <option value="" ${!res?'selected':''}>–</option>
           <option value="H" ${res==='H'?'selected':''}>H Win</option>
           <option value="D" ${res==='D'?'selected':''}>Draw</option>
           <option value="A" ${res==='A'?'selected':''}>A Win</option>
         </select>
       </td>
+      ${penCell}
       <td style="font-size:11px;color:${hasPred?'var(--green)':'var(--text3)'}">${hasPred?'✓ entered':'–'}</td>
     </tr>`;
   }).join('');
 
   wrap.innerHTML = `<div style="overflow-x:auto"><table class="res-table">
-    <thead><tr><th>Date</th><th>Home</th><th colspan="3">Score pred</th><th>Away</th><th>Result</th><th>Status</th></tr></thead>
+    <thead><tr><th>Date</th><th>Home</th><th colspan="3">Score pred</th><th>Away</th><th>Result</th>${isKnockout?'<th>Pens score</th>':''}<th>Status</th></tr></thead>
     <tbody>${rows}</tbody>
   </table></div>`;
+}
+
+function apOnResultChange(mid){
+  const sel = document.getElementById('apr-'+mid);
+  const penWrap = document.getElementById('appen-wrap-'+mid);
+  if(!penWrap) return;
+  penWrap.style.display = sel.value === 'D' ? 'flex' : 'none';
+  if(sel.value !== 'D'){
+    const ph=document.getElementById('appenh-'+mid), pa=document.getElementById('appena-'+mid);
+    if(ph) ph.value=''; if(pa) pa.value='';
+  }
 }
 
 function apAutoRes(mid){
   const h = parseInt(document.getElementById('aph-'+mid)?.value);
   const a = parseInt(document.getElementById('apa-'+mid)?.value);
   const sel = document.getElementById('apr-'+mid);
-  if(!isNaN(h) && !isNaN(a) && sel) sel.value = h>a?'H':h<a?'A':'D';
+  if(!isNaN(h) && !isNaN(a) && sel){ sel.value = h>a?'H':h<a?'A':'D'; apOnResultChange(mid); }
 }
 
 async function saveAdminPred(){
@@ -978,11 +1129,18 @@ async function saveAdminPred(){
     const hs = document.getElementById('aph-'+m.id)?.value;
     const as = document.getElementById('apa-'+m.id)?.value;
     const res = document.getElementById('apr-'+m.id)?.value;
+    const penH = document.getElementById('appenh-'+m.id)?.value;
+    const penA = document.getElementById('appena-'+m.id)?.value;
+    const hasPenScore = res==='D' && penH!==undefined && penA!==undefined && penH!=='' && penA!=='';
+    const penPick = hasPenScore && penH!==penA ? (Number(penH)>Number(penA)?'H':'A') : null;
     if(res && res!==''){
       predictions[m.id] = {
         homeScore: hs!==''?parseInt(hs):'',
         awayScore: as!==''?parseInt(as):'',
-        result: res
+        result: res,
+        penPick,
+        penHomeScore: hasPenScore ? parseInt(penH) : null,
+        penAwayScore: hasPenScore ? parseInt(penA) : null,
       };
     }
   });
@@ -998,6 +1156,113 @@ async function saveAdminPred(){
     Object.assign(allData.predictions[playerId], predictions);
     showToast(`Saved ${Object.keys(predictions).length} predictions for ${config.players.find(p=>p.id===playerId)?.name}!`,'ok');
     renderAdminPredRow();
+  } catch(e){ showToast('Error: '+e.message,'err'); }
+}
+
+// ── NEW: Admin-editable knockout fixtures (Round of 16 → Final) ─────────────
+async function renderFixtureEditor(){
+  const wrap = document.getElementById('fixture-editor');
+  if(!wrap) return;
+  try{
+    fixturesData = await api('/api/admin/fixtures','GET',null,getAdminPw());
+  } catch(e){
+    wrap.innerHTML = `<div style="color:var(--red);font-size:13px">Could not load fixtures: ${e.message}</div>`;
+    return;
+  }
+  const byStage = {};
+  fixturesData.fixtures.forEach(f=>{ (byStage[f.stage]=byStage[f.stage]||[]).push(f); });
+
+  let html = '';
+  ['Round of 16','Quarter-finals','Semi-finals','3rd Place','Final'].forEach(stage=>{
+    const list = byStage[stage];
+    if(!list || !list.length) return;
+    html += `<div class="fixture-stage-label">${stage}</div>`;
+    list.forEach(f=>{
+      const ko = f.kickoff ? new Date(f.kickoff).toLocaleDateString('en-GB',{day:'numeric',month:'short',timeZone:'Asia/Dubai'}) : '';
+      html += `<div class="fixture-row">
+        <span style="font-size:11px;color:var(--text3)">${ko}</span>
+        <input class="txt-inp" id="fx-home-${f.id}" value="${esc(f.home)}" placeholder="${esc(f.defaultHome)}">
+        <span style="text-align:center;color:var(--text3);font-size:12px">v</span>
+        <input class="txt-inp" id="fx-away-${f.id}" value="${esc(f.away)}" placeholder="${esc(f.defaultAway)}">
+      </div>`;
+    });
+  });
+  wrap.innerHTML = html || '<div style="color:var(--text3);font-size:13px">No knockout fixtures found.</div>';
+}
+
+async function saveFixtures(){
+  if(!fixturesData) { showToast('Fixtures not loaded yet','err'); return; }
+  let saved = 0, failed = 0;
+  for(const f of fixturesData.fixtures){
+    const homeInp = document.getElementById('fx-home-'+f.id);
+    const awayInp = document.getElementById('fx-away-'+f.id);
+    if(!homeInp || !awayInp) continue;
+    const home = homeInp.value.trim();
+    const away = awayInp.value.trim();
+    // Only push an update if something actually changed from what's currently set
+    if(home === f.home && away === f.away) continue;
+    try{
+      await api('/api/admin/fixtures/'+f.id,'POST',{home,away},getAdminPw());
+      saved++;
+    } catch(e){ failed++; }
+  }
+  if(saved === 0 && failed === 0){ showToast('No changes to save','ok'); return; }
+  showToast(`${saved} fixture${saved!==1?'s':''} updated${failed?`, ${failed} failed`:''}! ✓`,failed?'err':'ok');
+  // Refresh config so match cards / all-picks reflect new team names immediately
+  config = await api('/api/config');
+  renderFixtureEditor();
+}
+
+// ── NEW: Admin full read/write on every player's outright picks ─────────────
+let adminOutrightData = null;
+
+async function renderAdminOutrightRow(){
+  const sel = document.getElementById('aop-player-sel');
+  if(sel && config){
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">— Select player —</option>' +
+      config.players.map(p=>`<option value="${p.id}" ${p.id===cur?'selected':''}>${esc(p.name)}</option>`).join('');
+    if(cur) sel.value = cur;
+  }
+
+  const playerId = document.getElementById('aop-player-sel')?.value;
+  const wrap = document.getElementById('admin-outright-editor');
+  if(!wrap) return;
+  if(!playerId){ wrap.innerHTML='<div style="color:var(--text3);font-size:13px">Select a player above.</div>'; return; }
+
+  try{
+    adminOutrightData = await api('/api/admin/outright-predictions','GET',null,getAdminPw());
+  } catch(e){
+    wrap.innerHTML = `<div style="color:var(--red);font-size:13px">Could not load: ${e.message}</div>`;
+    return;
+  }
+
+  const preds = adminOutrightData.outright_preds[playerId] || {};
+  const answers = adminOutrightData.outright_answers || {};
+
+  wrap.innerHTML = `<div class="outright-grid" style="margin-bottom:0">` + config.outrights.map(o=>{
+    const val = preds[o.id] || '';
+    const ans = answers[o.id];
+    return `<div class="outright-card">
+      <div class="outright-label">${o.label} <span class="outright-pts">+${o.pts}pts</span></div>
+      <input class="outright-inp" id="aop-${o.id}" value="${esc(val)}" placeholder="Enter pick…">
+      ${ans?`<div class="outright-answer" style="color:var(--text3)">Actual: ${esc(ans)}</div>`:''}
+    </div>`;
+  }).join('') + `</div>`;
+}
+
+async function saveAdminOutright(){
+  const playerId = document.getElementById('aop-player-sel')?.value;
+  if(!playerId){ showToast('Select a player first','err'); return; }
+  const outright_preds = {};
+  config.outrights.forEach(o=>{
+    const inp = document.getElementById('aop-'+o.id);
+    if(inp) outright_preds[o.id] = inp.value.trim();
+  });
+  try{
+    await api('/api/admin/outright-predictions/'+playerId,'POST',{outright_preds},getAdminPw());
+    showToast(`Saved outright picks for ${config.players.find(p=>p.id===playerId)?.name}! ✓`,'ok');
+    renderAdminOutrightRow();
   } catch(e){ showToast('Error: '+e.message,'err'); }
 }
 
